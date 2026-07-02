@@ -63,23 +63,18 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Replica el estilo visual de la app Procesador de archivos,
-    usando el fondo desde la carpeta assets.
+    Replica la estructura visual de la app Procesador de archivos usando static/.
 
-    Importante:
-    - No se usa base64 para el fondo porque la imagen es pesada.
-    - Streamlit Cloud sirve los archivos estáticos del repositorio usando la ruta app/assets/...
+    Ruta esperada en GitHub / Streamlit Cloud:
+    static/fondo_finning_upscayl.png
     """
-    ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
+    ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
 
     if not ruta_fondo.exists():
-        st.warning(
-            "No se encontró la imagen de fondo. "
-            "Verifica que exista: assets/fondo_finning_upscayl.png"
-        )
+        st.error(f"No se encontró la imagen de fondo en: {ruta_fondo}")
         return
 
-    fondo_url = "app/assets/fondo_finning_upscayl.png"
+    fondo_url = "app/static/fondo_finning_upscayl.png"
 
     css = """
     <style>
@@ -87,6 +82,7 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
+    /* Fondo general de la aplicación */
     .stApp,
     [data-testid="stAppViewContainer"] {
         background-image:
@@ -104,6 +100,7 @@ def aplicar_fondo_corporativo():
         background-attachment: fixed !important;
     }
 
+    /* Estructura interna transparente */
     [data-testid="stAppViewContainer"] > .main,
     section.main,
     [data-testid="stMain"],
@@ -111,32 +108,37 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
+    /* Header superior de Streamlit transparente */
     [data-testid="stHeader"] {
         background: transparent !important;
     }
 
+    /* Contenedor principal flotante */
     .block-container {
-        max-width: 980px !important;
-        background-color: rgba(255, 255, 255, 0.75) !important;
-        padding: 2.5rem 3rem !important;
-        border-radius: 18px !important;
-        border-top: 8px solid #FFCD11 !important;
-        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
-        margin-top: 2rem !important;
-        margin-bottom: 2rem !important;
+        max-width: 980px;
+        background-color: rgba(255, 255, 255, 0.75);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        padding: 2.5rem 3rem;
+        border-radius: 18px;
+        border-top: 8px solid #FFCD11;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
     }
 
+    /* Tarjeta superior negra */
     .header-card {
-        background-color: rgba(0, 0, 0, 0.96) !important;
-        padding: 42px 34px !important;
-        border-radius: 20px !important;
-        border-bottom: 8px solid #FFCD11 !important;
-        margin-bottom: 34px !important;
-        min-height: 230px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
+        background-color: rgba(0, 0, 0, 0.96);
+        padding: 42px 34px;
+        border-radius: 20px;
+        border-bottom: 8px solid #FFCD11;
+        margin-bottom: 34px;
+        min-height: 230px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25);
     }
 
     .header-title {
@@ -165,22 +167,38 @@ def aplicar_fondo_corporativo():
         color: #111111 !important;
     }
 
+    /* Menú lateral flotante */
     section[data-testid="stSidebar"] {
         background: transparent !important;
     }
 
     section[data-testid="stSidebar"] > div:first-child {
         background: rgba(11, 13, 18, 0.93) !important;
-        margin: 1rem 0 1rem 1rem !important;
-        border-radius: 18px !important;
-        border: 1px solid rgba(255, 205, 17, 0.35) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
+        margin: 1rem 0 1rem 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 205, 17, 0.35);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
     }
 
     section[data-testid="stSidebar"] * {
         color: #FFFFFF !important;
     }
 
+    section[data-testid="stSidebar"] .stButton > button {
+        background-color: #FFCD11 !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+    }
+
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background-color: #000000 !important;
+        color: #FFCD11 !important;
+        border: 2px solid #FFCD11 !important;
+    }
+
+    /* Botón de abrir/cerrar sidebar */
     [data-testid="collapsedControl"] {
         background: rgba(11, 13, 18, 0.90) !important;
         border-radius: 10px !important;
@@ -191,6 +209,19 @@ def aplicar_fondo_corporativo():
         fill: #FFCD11 !important;
     }
 
+    /* Selectbox */
+    div[data-baseweb="select"] > div {
+        background-color: #1F212A !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        border: 1px solid #1F212A !important;
+    }
+
+    div[data-baseweb="select"] span {
+        color: #FFFFFF !important;
+    }
+
+    /* Cargador de archivos */
     section[data-testid="stFileUploaderDropzone"] {
         background-color: rgba(255, 255, 255, 0.70) !important;
         border: 2px dashed #FFCD11 !important;
@@ -218,6 +249,7 @@ def aplicar_fondo_corporativo():
         border: 2px solid #FFCD11 !important;
     }
 
+    /* Botones normales */
     .stButton > button {
         background-color: #FFCD11 !important;
         color: #000000 !important;
@@ -228,12 +260,27 @@ def aplicar_fondo_corporativo():
         text-transform: uppercase;
     }
 
+    .stButton > button p,
+    .stButton > button span,
+    .stButton > button div {
+        color: #000000 !important;
+        opacity: 1 !important;
+        font-weight: 800 !important;
+    }
+
     .stButton > button:hover {
         background-color: #000000 !important;
         color: #FFCD11 !important;
         border: 2px solid #FFCD11 !important;
     }
 
+    .stButton > button:hover p,
+    .stButton > button:hover span,
+    .stButton > button:hover div {
+        color: #FFCD11 !important;
+    }
+
+    /* Botón de descarga */
     .stDownloadButton > button {
         background-color: #000000 !important;
         color: #FFFFFF !important;
@@ -243,15 +290,32 @@ def aplicar_fondo_corporativo():
         font-weight: 800 !important;
     }
 
+    .stDownloadButton > button p,
+    .stDownloadButton > button span,
+    .stDownloadButton > button div {
+        color: #FFFFFF !important;
+        opacity: 1 !important;
+        font-weight: 800 !important;
+    }
+
     .stDownloadButton > button:hover {
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 2px solid #000000 !important;
     }
+
+    .stDownloadButton > button:hover p,
+    .stDownloadButton > button:hover span,
+    .stDownloadButton > button:hover div {
+        color: #000000 !important;
+    }
     </style>
     """
 
-    st.markdown(css.replace("__FONDO_URL__", fondo_url), unsafe_allow_html=True)
+    st.markdown(
+        css.replace("__FONDO_URL__", fondo_url),
+        unsafe_allow_html=True,
+    )
 
 
 def mostrar_encabezado_corporativo():
@@ -260,7 +324,7 @@ def mostrar_encabezado_corporativo():
         """
         <div class="header-card">
             <div class="header-title">
-                Revisión de Detenciones AMT
+                Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT
             </div>
             <p class="header-subtitle">
                 Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
