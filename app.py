@@ -29,9 +29,9 @@ from reportlab.platypus import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Revisión de Detenciones AMT",
+    page_title="Revisión de Detenciones AMT vs Collahuasi",
     page_icon="🛠️",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 
@@ -63,10 +63,9 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica el fondo corporativo Finning/CAT desde la carpeta assets.
-    Deja la app con un estilo visual similar a la segunda imagen de referencia.
+    Aplica el estilo visual corporativo de la app Procesador de archivos,
+    usando la imagen ubicada en assets/fondo_finning_upscayl.png.
     """
-
     ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
 
     if not ruta_fondo.exists():
@@ -81,181 +80,246 @@ def aplicar_fondo_corporativo():
     st.markdown(
         f"""
         <style>
-        /* =====================================================
-           FONDO GENERAL
-           ===================================================== */
-        html, body, .stApp {{
+        html, body {{
             background: transparent !important;
         }}
 
-        .stApp {{
+        /* Fondo general de la aplicación */
+        .stApp,
+        [data-testid="stAppViewContainer"] {{
             background-image:
                 linear-gradient(
-                    rgba(255, 255, 255, 0.22),
-                    rgba(255, 255, 255, 0.22)
+                    180deg,
+                    rgba(11, 13, 18, 0.78) 0px,
+                    rgba(11, 13, 18, 0.40) 150px,
+                    rgba(255, 255, 255, 0.06) 330px,
+                    rgba(255, 255, 255, 0.06) 100%
                 ),
                 url("data:image/png;base64,{fondo_base64}") !important;
             background-size: cover !important;
-            background-position: center center !important;
+            background-position: center top !important;
             background-repeat: no-repeat !important;
             background-attachment: fixed !important;
         }}
 
-        [data-testid="stAppViewContainer"] {{
-            background: transparent !important;
-        }}
-
-        [data-testid="stAppViewContainer"] > .main {{
-            background: transparent !important;
-        }}
-
-        [data-testid="stMain"] {{
-            background: transparent !important;
-        }}
-
+        /* Estructura interna transparente */
+        [data-testid="stAppViewContainer"] > .main,
+        section.main,
+        [data-testid="stMain"],
         [data-testid="stMainBlockContainer"] {{
             background: transparent !important;
         }}
 
+        /* Header superior de Streamlit transparente */
         [data-testid="stHeader"] {{
-            background: rgba(0, 0, 0, 0.12) !important;
+            background: transparent !important;
         }}
 
-        /* =====================================================
-           SIDEBAR
-           ===================================================== */
-        [data-testid="stSidebar"] > div:first-child {{
-            background: rgba(17, 24, 39, 0.94) !important;
-            backdrop-filter: blur(4px);
-        }}
-
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2,
-        [data-testid="stSidebar"] h3,
-        [data-testid="stSidebar"] h4,
-        [data-testid="stSidebar"] p,
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span,
-        [data-testid="stSidebar"] div {{
-            color: #ffffff !important;
-        }}
-
-        /* =====================================================
-           CONTENEDOR PRINCIPAL BLANCO
-           ===================================================== */
+        /* Contenedor principal flotante */
         .block-container {{
-            max-width: 1100px !important;
-            background: rgba(255, 255, 255, 0.78) !important;
-            border-radius: 26px !important;
-            border-top: 8px solid #ffcc00 !important;
-            padding: 1.5rem 3rem 2.5rem 3rem !important;
-            margin-top: 1.2rem !important;
+            max-width: 980px !important;
+            background-color: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            padding: 2.5rem 3rem !important;
+            border-radius: 18px !important;
+            border-top: 8px solid #FFCD11 !important;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
+            margin-top: 2rem !important;
             margin-bottom: 2rem !important;
-            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.28) !important;
-            backdrop-filter: blur(2px);
         }}
 
-        /* Ocultar margen extra del título Streamlit */
-        .block-container h1:first-of-type {{
-            display: none !important;
+        /* Tarjeta superior negra */
+        .header-card {{
+            background-color: rgba(0, 0, 0, 0.96) !important;
+            padding: 42px 34px !important;
+            border-radius: 20px !important;
+            border-bottom: 8px solid #FFCD11 !important;
+            margin-bottom: 34px !important;
+            min-height: 230px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
         }}
 
-        /* =====================================================
-           HERO SUPERIOR NEGRO
-           ===================================================== */
-        .hero-panel {{
-            background: rgba(0, 0, 0, 0.96);
-            color: white;
-            border-radius: 24px;
-            padding: 2.3rem 2.4rem 2rem 2.4rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.30);
-            border-bottom: 10px solid #ffcc00;
+        .header-title {{
+            color: #FFFFFF !important;
+            font-size: 48px !important;
+            font-weight: 800 !important;
+            line-height: 1.15 !important;
+            margin-bottom: 18px !important;
         }}
 
-        .hero-title {{
-            margin: 0 0 1rem 0;
-            font-size: clamp(2rem, 4vw, 3rem);
-            line-height: 1.1;
-            font-weight: 800;
-            color: #ffffff !important;
+        .header-subtitle {{
+            color: #E8E8E8 !important;
+            font-size: 20px !important;
+            line-height: 1.6 !important;
+            font-weight: 400 !important;
+            margin: 0 !important;
         }}
 
-        .hero-subtitle {{
-            margin: 0;
-            font-size: 1.05rem;
-            color: #ffffff !important;
+        h1, h2, h3 {{
+            color: #000000 !important;
+            font-weight: 800 !important;
         }}
 
-        /* =====================================================
-           TEXTO GENERAL
-           ===================================================== */
-        .block-container,
-        .block-container p,
-        .block-container label,
-        .block-container span,
-        .block-container div,
-        .block-container h2,
-        .block-container h3,
-        .block-container h4,
-        .block-container h5,
-        .block-container h6 {{
-            color: #111827 !important;
-            text-shadow: none !important;
+        .block-container > div label,
+        .block-container > div span {{
+            color: #111111 !important;
         }}
 
-        /* =====================================================
-           ZONA CARGADORES
-           ===================================================== */
-        .upload-panel {{
-            background: rgba(255, 243, 205, 0.55);
-            border-radius: 18px;
-            padding: 1.2rem 1.2rem 0.4rem 1.2rem;
-            margin-bottom: 1.5rem;
+        /* Menú lateral flotante */
+        section[data-testid="stSidebar"] {{
+            background: transparent !important;
         }}
 
-        div[data-testid="stFileUploader"] {{
-            background-color: rgba(255, 255, 255, 0.25) !important;
-            border: 2px dashed #ffcc00 !important;
-            border-radius: 14px !important;
-            padding: 14px !important;
+        section[data-testid="stSidebar"] > div:first-child {{
+            background: rgba(11, 13, 18, 0.93) !important;
+            margin: 1rem 0 1rem 1rem !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(255, 205, 17, 0.35) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
         }}
 
-        div[data-testid="stFileUploader"] section {{
-            background-color: rgba(31, 41, 55, 0.92) !important;
-            border-radius: 10px !important;
+        section[data-testid="stSidebar"] * {{
+            color: #FFFFFF !important;
         }}
 
-        div[data-testid="stFileUploader"] button {{
-            background-color: #ffcc00 !important;
-            color: #111827 !important;
-            border: 2px solid #111827 !important;
+        section[data-testid="stSidebar"] .stButton > button {{
+            background-color: #FFCD11 !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
             border-radius: 8px !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
         }}
 
-        /* =====================================================
-           BOTONES
-           ===================================================== */
-        div.stButton > button:first-child,
-        div.stDownloadButton > button:first-child {{
-            background-color: #ffcc00 !important;
-            color: #111827 !important;
-            border: 2px solid #111827 !important;
+        section[data-testid="stSidebar"] .stButton > button:hover {{
+            background-color: #000000 !important;
+            color: #FFCD11 !important;
+            border: 2px solid #FFCD11 !important;
+        }}
+
+        /* Botón de abrir/cerrar sidebar */
+        [data-testid="collapsedControl"] {{
+            background: rgba(11, 13, 18, 0.90) !important;
             border-radius: 10px !important;
-            font-weight: 700 !important;
+            padding: 6px !important;
         }}
 
-        div.stButton > button:first-child:hover,
-        div.stDownloadButton > button:first-child:hover {{
-            background-color: #f2b800 !important;
-            color: #111827 !important;
-            border: 2px solid #111827 !important;
+        [data-testid="collapsedControl"] svg {{
+            fill: #FFCD11 !important;
         }}
 
-        /* =====================================================
-           ALERTAS Y TABLAS
-           ===================================================== */
+        /* Selectbox */
+        div[data-baseweb="select"] > div {{
+            background-color: #1F212A !important;
+            color: #FFFFFF !important;
+            border-radius: 8px !important;
+            border: 1px solid #1F212A !important;
+        }}
+
+        div[data-baseweb="select"] span {{
+            color: #FFFFFF !important;
+        }}
+
+        /* Cargador de archivos */
+        section[data-testid="stFileUploaderDropzone"] {{
+            background-color: rgba(255, 255, 255, 0.70) !important;
+            border: 2px dashed #FFCD11 !important;
+            border-radius: 14px !important;
+            padding: 22px !important;
+        }}
+
+        section[data-testid="stFileUploaderDropzone"] p,
+        section[data-testid="stFileUploaderDropzone"] span,
+        section[data-testid="stFileUploaderDropzone"] small {{
+            color: #111111 !important;
+        }}
+
+        section[data-testid="stFileUploaderDropzone"] button {{
+            background-color: #FFCD11 !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px !important;
+            font-weight: 800 !important;
+        }}
+
+        section[data-testid="stFileUploaderDropzone"] button:hover {{
+            background-color: #000000 !important;
+            color: #FFCD11 !important;
+            border: 2px solid #FFCD11 !important;
+        }}
+
+        /* Botones normales */
+        .stButton > button {{
+            background-color: #FFCD11 !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px !important;
+            padding: 0.6rem 1.2rem !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+        }}
+
+        .stButton > button p,
+        .stButton > button span,
+        .stButton > button div {{
+            color: #000000 !important;
+            opacity: 1 !important;
+            font-weight: 800 !important;
+        }}
+
+        .stButton > button:hover {{
+            background-color: #000000 !important;
+            color: #FFCD11 !important;
+            border: 2px solid #FFCD11 !important;
+        }}
+
+        .stButton > button:hover p,
+        .stButton > button:hover span,
+        .stButton > button:hover div {{
+            color: #FFCD11 !important;
+        }}
+
+        /* Botón de descarga */
+        .stDownloadButton > button {{
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
+            border: 2px solid #FFCD11 !important;
+            border-radius: 8px !important;
+            padding: 0.6rem 1.2rem !important;
+            font-weight: 800 !important;
+        }}
+
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {{
+            color: #FFFFFF !important;
+            opacity: 1 !important;
+            font-weight: 800 !important;
+        }}
+
+        .stDownloadButton > button:hover {{
+            background-color: #FFCD11 !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+        }}
+
+        .stDownloadButton > button:hover p,
+        .stDownloadButton > button:hover span,
+        .stDownloadButton > button:hover div {{
+            color: #000000 !important;
+        }}
+
+        /* Métricas, tablas y alertas */
+        [data-testid="stMetric"] {{
+            background-color: rgba(255, 255, 255, 0.70) !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            border-left: 4px solid #FFCD11 !important;
+        }}
+
         div[data-testid="stAlert"] {{
             border-radius: 12px !important;
         }}
@@ -265,26 +329,27 @@ def aplicar_fondo_corporativo():
             border-radius: 12px !important;
         }}
 
-        /* =====================================================
-           EXPANDER
-           ===================================================== */
         details {{
-            background: rgba(255, 255, 255, 0.80);
-            border-radius: 12px;
-            padding: 0.35rem 0.75rem;
+            background-color: rgba(255, 255, 255, 0.78) !important;
+            border-radius: 12px !important;
+            padding: 0.4rem 0.7rem !important;
         }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
+
 def mostrar_encabezado_corporativo():
+    """Muestra la tarjeta negra superior con el mismo estilo de la app Procesador."""
     st.markdown(
         """
-        <div class="hero-panel">
-            <h1 class="hero-title">Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT</h1>
-            <p class="hero-subtitle">
-                Carga ambos archivos Excel, compara los registros y genera el informe de revisión.
+        <div class="header-card">
+            <div class="header-title">
+                Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT
+            </div>
+            <p class="header-subtitle">
+                Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
             </p>
         </div>
         """,
@@ -1776,28 +1841,36 @@ def main():
     aplicar_fondo_corporativo()
     mostrar_encabezado_corporativo()
 
-    st.markdown('<div class="upload-panel">', unsafe_allow_html=True)
-
     col1, col2 = st.columns(2)
-
     with col1:
-        archivo_daily = st.file_uploader(
-            "1. Cargar DailyDowntimeLog.xlsx",
-            type=["xlsx"],
-            key="daily"
-        )
-
+        archivo_daily = st.file_uploader("1. Cargar DailyDowntimeLog.xlsx", type=["xlsx"])
     with col2:
-        archivo_collahuasi = st.file_uploader(
-            "2. Cargar DETENCIONES COLLAHUASI 2026.xlsx",
-            type=["xlsx"],
-            key="collahuasi"
-        )
+        archivo_collahuasi = st.file_uploader("2. Cargar DETENCIONES COLLAHUASI 2026.xlsx", type=["xlsx"])
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.sidebar.header("Configuración")
+    # Tolerancia fija: 0 minutos.
+    # Según la lógica solicitada, no debe existir diferencia permitida entre los tiempos.
+    tolerancia_minutos = 0
+    filtrar_por_rango_daily = st.sidebar.checkbox(
+        "Validar solo registros Collahuasi dentro del rango DailyDowntimeLog",
+        value=True,
+    )
+    validar_continuidad = st.sidebar.checkbox(
+        "Validar gaps/solapamientos entre cortes Collahuasi",
+        value=True,
+    )
+    # La cobertura total del evento AMT se valida siempre según la lógica solicitada:
+    # AMT debe cubrir el inicio y término de la detención continua indicada en Collahuasi.
+    validar_cobertura_total = True
 
-    if not archivo_daily or not archivo_collahuasi:
-        st.info("Carga ambos archivos para iniciar la revisión.")
+    # Parámetros In Progress fijos según la lógica definida.
+    # No se muestran en la barra lateral para evitar cambios manuales de criterio.
+    detectar_in_progress_por_0800 = False
+    ventana_in_progress_horas = 168
+    max_gap_in_progress_horas = 2.0
+
+    if archivo_daily is None or archivo_collahuasi is None:
+        st.warning("Carga ambos archivos para iniciar la revisión.")
         return
 
     if st.button("Comparar detenciones", type="primary"):
