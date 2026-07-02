@@ -29,7 +29,7 @@ from reportlab.platypus import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Revisión de Detenciones AMT vs Collahuasi",
+    page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
     layout="wide",
 )
@@ -62,9 +62,9 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica fondo corporativo Finning/CAT desde la carpeta assets.
+    Aplica el fondo corporativo Finning/CAT desde la carpeta assets.
 
-    Ruta esperada:
+    Ruta esperada en GitHub / Streamlit Cloud:
     assets/fondo_finning_upscayl.png
     """
 
@@ -82,12 +82,29 @@ def aplicar_fondo_corporativo():
     st.markdown(
         f"""
         <style>
-        /* Fondo general de la app */
-        .stApp {{
+        /* =====================================================
+           Fondo corporativo
+           ===================================================== */
+
+        html,
+        body,
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"],
+        [data-testid="stMainBlockContainer"] {{
+            background: transparent !important;
+        }}
+
+        .stApp::before {{
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
             background-image:
                 linear-gradient(
-                    rgba(255, 255, 255, 0.18),
-                    rgba(255, 255, 255, 0.18)
+                    rgba(255, 255, 255, 0.16),
+                    rgba(255, 255, 255, 0.16)
                 ),
                 url("data:image/png;base64,{fondo_base64}");
             background-size: cover;
@@ -96,40 +113,57 @@ def aplicar_fondo_corporativo():
             background-attachment: fixed;
         }}
 
-        /* Contenedor principal transparente para que se vea el fondo */
-        [data-testid="stAppViewContainer"] {{
-            background: transparent;
+        .stApp > * {{
+            position: relative;
+            z-index: 1;
         }}
 
-        [data-testid="stAppViewContainer"] > .main {{
-            background: transparent;
-        }}
-
-        /* Header superior transparente */
         [data-testid="stHeader"] {{
-            background: rgba(255, 255, 255, 0);
+            background: transparent !important;
         }}
 
-        /* Barra lateral */
+        /* =====================================================
+           Barra lateral
+           ===================================================== */
+
         [data-testid="stSidebar"] > div:first-child {{
-            background: rgba(17, 24, 39, 0.94);
+            background: rgba(17, 24, 39, 0.94) !important;
             backdrop-filter: blur(4px);
         }}
 
-        /* Caja principal estilo corporativo */
-        .block-container {{
-            max-width: 1280px;
-            background: rgba(255, 255, 255, 0.82);
-            border-radius: 24px;
-            border-top: 8px solid #ffcc00;
-            padding: 2.6rem 3rem 3rem 3rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span,
+        [data-testid="stSidebar"] div {{
+            color: #ffffff !important;
         }}
 
-        /* Texto general dentro de la caja principal */
-        .block-container h1,
+        /* =====================================================
+           Contenedor principal
+           ===================================================== */
+
+        .block-container {{
+            max-width: 1320px !important;
+            background: rgba(255, 255, 255, 0.68) !important;
+            border-radius: 24px !important;
+            border-top: 8px solid #ffcc00 !important;
+            padding: 2.4rem 3rem 3rem 3rem !important;
+            margin-top: 2rem !important;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30) !important;
+            backdrop-filter: blur(2px);
+        }}
+
+        .block-container h1 {{
+            font-size: clamp(2.1rem, 3.1vw, 3.1rem) !important;
+            line-height: 1.12 !important;
+            color: #111827 !important;
+        }}
+
         .block-container h2,
         .block-container h3,
         .block-container h4,
@@ -139,82 +173,65 @@ def aplicar_fondo_corporativo():
         .block-container label,
         .block-container span,
         .block-container div {{
-            color: #111827;
-            text-shadow: none;
+            color: #111827 !important;
+            text-shadow: none !important;
         }}
 
-        /* Texto de la barra lateral */
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2,
-        [data-testid="stSidebar"] h3,
-        [data-testid="stSidebar"] h4,
-        [data-testid="stSidebar"] p,
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span,
-        [data-testid="stSidebar"] div {{
-            color: #ffffff;
-        }}
+        /* =====================================================
+           Cargadores de archivo
+           ===================================================== */
 
-        /* Separación visual de los cargadores */
         div[data-testid="stFileUploader"] {{
-            background-color: rgba(255, 255, 255, 0.62);
-            border: 2px dashed #ffcc00;
-            border-radius: 14px;
-            padding: 14px;
+            background-color: rgba(255, 255, 255, 0.55) !important;
+            border: 2px dashed #ffcc00 !important;
+            border-radius: 14px !important;
+            padding: 14px !important;
         }}
 
         div[data-testid="stFileUploader"] section {{
-            background-color: rgba(31, 41, 55, 0.92);
-            border-radius: 10px;
+            background-color: rgba(31, 41, 55, 0.92) !important;
+            border-radius: 10px !important;
         }}
 
         div[data-testid="stFileUploader"] button {{
-            background-color: #ffcc00;
-            color: #111827;
-            border: 2px solid #111827;
-            border-radius: 8px;
-            font-weight: 700;
+            background-color: #ffcc00 !important;
+            color: #111827 !important;
+            border: 2px solid #111827 !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
         }}
 
-        /* Botón principal */
-        div.stButton > button:first-child {{
-            background-color: #ffcc00;
-            color: #111827;
-            border: 2px solid #111827;
-            border-radius: 10px;
-            font-weight: 700;
-        }}
+        /* =====================================================
+           Botones
+           ===================================================== */
 
-        div.stButton > button:first-child:hover {{
-            background-color: #f2b800;
-            color: #111827;
-            border: 2px solid #111827;
-        }}
-
-        /* Botones de descarga */
+        div.stButton > button:first-child,
         div.stDownloadButton > button:first-child {{
-            background-color: #ffcc00;
-            color: #111827;
-            border: 2px solid #111827;
-            border-radius: 10px;
-            font-weight: 700;
+            background-color: #ffcc00 !important;
+            color: #111827 !important;
+            border: 2px solid #111827 !important;
+            border-radius: 10px !important;
+            font-weight: 700 !important;
         }}
 
+        div.stButton > button:first-child:hover,
         div.stDownloadButton > button:first-child:hover {{
-            background-color: #f2b800;
-            color: #111827;
-            border: 2px solid #111827;
+            background-color: #f2b800 !important;
+            color: #111827 !important;
+            border: 2px solid #111827 !important;
         }}
 
-        /* Alertas */
+        /* =====================================================
+           Alertas y tablas
+           ===================================================== */
+
         div[data-testid="stAlert"] {{
-            border-radius: 12px;
+            border-radius: 12px !important;
         }}
 
-        /* Dataframes */
         div[data-testid="stDataFrame"] {{
-            background-color: rgba(255, 255, 255, 0.92);
-            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.92) !important;
+            border-radius: 12px !important;
         }}
         </style>
         """,
