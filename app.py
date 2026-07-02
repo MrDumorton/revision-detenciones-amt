@@ -92,7 +92,7 @@ ERROR_DESCRIPCION = {
     "IN_PROGRESS_AMBOS_REFERENCIAL_0800": "AMT y Detenciones Collahuasi mantienen el mismo término referencial del reporte; se deja solo como observación.",
     "IN_PROGRESS_SIN_TERMINO_COLLAHUASI": "DailyDowntimeLog muestra el evento como In Progress y Collahuasi tampoco presenta un término real distinto al término referencial del reporte.",
     "TERMINO_AMT_REFERENCIAL_RANGO": "El término AMT coincide con el término del rango descargado del reporte; no se considera error por diferencia de término ni de duración.",
-    "TERMINO_COLLAHUASI_REFERENCIAL_0800": "El término Collahuasi corresponde a la fecha más reciente del archivo con hora 08:00; se considera término referencial del registro y no se evalúa como diferencia de término ni de duración.",
+    "TERMINO_COLLAHUASI_REFERENCIAL_0800": "El término de Collahuasi se considera término referencial del registro.",
     "IN_PROGRESS_SIN_REGISTRO_COLLAHUASI": "DailyDowntimeLog muestra el evento como In Progress, pero no se encontraron tramos asociados en Detenciones Collahuasi.",
     "INICIO_AMT_REFERENCIAL_RANGO": "El inicio AMT coincide con el inicio del rango del reporte, por lo que se considera inicio referencial y no se evalúa como diferencia de inicio.",
 }
