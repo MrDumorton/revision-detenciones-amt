@@ -2,6 +2,8 @@ import io
 import re
 import zipfile
 import unicodedata
+import base64
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime, date, time, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -27,7 +29,7 @@ from reportlab.platypus import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Revisión de Detenciones AMT",
+    page_title="Revisión de Detenciones AMT vs Collahuasi",
     page_icon="🛠️",
     layout="wide",
 )
@@ -52,6 +54,73 @@ MESES = {
 #   inicio/término/duración contra DailyDowntimeLog, se usan fecha, hora y minuto.
 # - Para validar continuidad entre cortes Collahuasi, se conservan horas, minutos y segundos.
 EPS_HORAS = 1e-6
+
+
+# ============================================================
+# ESTILO VISUAL / FONDO CORPORATIVO
+# ============================================================
+
+def aplicar_fondo_corporativo():
+    """Aplica imagen de fondo corporativa Finning/CAT a la app Streamlit."""
+    ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
+
+    if not ruta_fondo.exists():
+        # Si no está la imagen, no detenemos la app.
+        return
+
+    fondo_base64 = base64.b64encode(ruta_fondo.read_bytes()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+                url("data:image/png;base64,{fondo_base64}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+
+        [data-testid="stHeader"] {{
+            background: rgba(255, 255, 255, 0);
+        }}
+
+        [data-testid="stSidebar"] > div:first-child {{
+            background: rgba(17, 24, 39, 0.90);
+            backdrop-filter: blur(3px);
+        }}
+
+        .block-container {{
+            background: rgba(10, 16, 26, 0.84);
+            border-radius: 18px;
+            padding: 2rem 2.5rem 2.5rem 2.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+        }}
+
+        h1, h2, h3, h4, h5, h6, p, label, span, div {{
+            text-shadow: none;
+        }}
+
+        div.stButton > button:first-child {{
+            border-radius: 10px;
+            border: 1px solid #fbbf24;
+            background: #fbbf24;
+            color: #111827;
+            font-weight: 700;
+        }}
+
+        div.stDownloadButton > button:first-child {{
+            border-radius: 10px;
+            border: 1px solid #fbbf24;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def truncar_a_minuto(valor):
@@ -79,7 +148,7 @@ def diferencia_abs_mayor(a: float, b: float = 0.0) -> bool:
 
 ERROR_DESCRIPCION = {
     "REGISTRO_COLLAHUASI_SIN_RESPALDO_AMT": "Detención pendiente de ingreso en AMT.",
-    "DETENCION_PENDIENTE_INGRESO_AMT": "Detención registrada en Detenciones Collahuasi, pero pendiente de ingreso en AMT.",
+    "DETENCION_PENDIENTE_INGRESO_AMT": "Detención registrada en Detenciones Collahuasi, pero pendiente de ingreso en AMT/DailyDowntimeLog.",
     "TRAMO_INICIA_ANTES_AMT": "El tramo de Collahuasi inicia antes del evento AMT.",
     "TRAMO_TERMINA_DESPUES_AMT": "El tramo de Collahuasi termina después del evento AMT.",
     "DURACION_COLLAHUASI_EXCEDE_AMT": "La suma de tramos Collahuasi excede la duración AMT.",
@@ -92,7 +161,7 @@ ERROR_DESCRIPCION = {
     "IN_PROGRESS_AMBOS_REFERENCIAL_0800": "AMT y Detenciones Collahuasi mantienen el mismo término referencial del reporte; se deja solo como observación.",
     "IN_PROGRESS_SIN_TERMINO_COLLAHUASI": "DailyDowntimeLog muestra el evento como In Progress y Collahuasi tampoco presenta un término real distinto al término referencial del reporte.",
     "TERMINO_AMT_REFERENCIAL_RANGO": "El término AMT coincide con el término del rango descargado del reporte; no se considera error por diferencia de término ni de duración.",
-    "TERMINO_COLLAHUASI_REFERENCIAL_0800": "El término de Collahuasi se considera término referencial del registro.",
+    "TERMINO_COLLAHUASI_REFERENCIAL_0800": "El término Collahuasi corresponde a la fecha más reciente del archivo con hora 08:00; se considera término referencial del registro y no se evalúa como diferencia de término ni de duración.",
     "IN_PROGRESS_SIN_REGISTRO_COLLAHUASI": "DailyDowntimeLog muestra el evento como In Progress, pero no se encontraron tramos asociados en Detenciones Collahuasi.",
     "INICIO_AMT_REFERENCIAL_RANGO": "El inicio AMT coincide con el inicio del rango del reporte, por lo que se considera inicio referencial y no se evalúa como diferencia de inicio.",
 }
@@ -1536,7 +1605,7 @@ def generar_excel_resultados(
 # ============================================================
 
 def main():
-    st.title("🛠️ Revisión de Detenciones en AMT")
+    st.title("🛠️ Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT")
 
     st.markdown("Carga ambos archivos Excel y presiona **Comparar detenciones** para generar el informe.")
 
@@ -1565,8 +1634,8 @@ def main():
     # Parámetros In Progress fijos según la lógica definida.
     # No se muestran en la barra lateral para evitar cambios manuales de criterio.
     detectar_in_progress_por_0800 = False
-    ventana_in_progress_horas = 12
-    max_gap_in_progress_horas = 0
+    ventana_in_progress_horas = 168
+    max_gap_in_progress_horas = 2.0
 
     if archivo_daily is None or archivo_collahuasi is None:
         st.warning("Carga ambos archivos para iniciar la revisión.")
