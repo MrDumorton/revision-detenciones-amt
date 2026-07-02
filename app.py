@@ -1536,7 +1536,7 @@ def generar_excel_resultados(
 # ============================================================
 
 def main():
-    st.title("🛠️ Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT")
+    st.title("🛠️ Revisión de Detenciones en AMT")
 
     st.markdown("Carga ambos archivos Excel y presiona **Comparar detenciones** para generar el informe.")
 
@@ -1565,8 +1565,8 @@ def main():
     # Parámetros In Progress fijos según la lógica definida.
     # No se muestran en la barra lateral para evitar cambios manuales de criterio.
     detectar_in_progress_por_0800 = False
-    ventana_in_progress_horas = 168
-    max_gap_in_progress_horas = 2.0
+    ventana_in_progress_horas = 12
+    max_gap_in_progress_horas = 0
 
     if archivo_daily is None or archivo_collahuasi is None:
         st.warning("Carga ambos archivos para iniciar la revisión.")
