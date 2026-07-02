@@ -1774,41 +1774,30 @@ def generar_excel_resultados(
 
 def main():
     aplicar_fondo_corporativo()
+    mostrar_encabezado_corporativo()
 
-    st.title("🛠️ Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT")
-
-    st.markdown("Carga ambos archivos Excel y presiona **Comparar detenciones** para generar el informe.")
+    st.markdown('<div class="upload-panel">', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
+
     with col1:
-        archivo_daily = st.file_uploader("1. Cargar DailyDowntimeLog.xlsx", type=["xlsx"])
+        archivo_daily = st.file_uploader(
+            "1. Cargar DailyDowntimeLog.xlsx",
+            type=["xlsx"],
+            key="daily"
+        )
+
     with col2:
-        archivo_collahuasi = st.file_uploader("2. Cargar DETENCIONES COLLAHUASI 2026.xlsx", type=["xlsx"])
+        archivo_collahuasi = st.file_uploader(
+            "2. Cargar DETENCIONES COLLAHUASI 2026.xlsx",
+            type=["xlsx"],
+            key="collahuasi"
+        )
 
-    st.sidebar.header("Configuración")
-    # Tolerancia fija: 0 minutos.
-    # Según la lógica solicitada, no debe existir diferencia permitida entre los tiempos.
-    tolerancia_minutos = 0
-    filtrar_por_rango_daily = st.sidebar.checkbox(
-        "Validar solo registros Collahuasi dentro del rango DailyDowntimeLog",
-        value=True,
-    )
-    validar_continuidad = st.sidebar.checkbox(
-        "Validar gaps/solapamientos entre cortes Collahuasi",
-        value=True,
-    )
-    # La cobertura total del evento AMT se valida siempre según la lógica solicitada:
-    # AMT debe cubrir el inicio y término de la detención continua indicada en Collahuasi.
-    validar_cobertura_total = True
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Parámetros In Progress fijos según la lógica definida.
-    # No se muestran en la barra lateral para evitar cambios manuales de criterio.
-    detectar_in_progress_por_0800 = False
-    ventana_in_progress_horas = 168
-    max_gap_in_progress_horas = 2.0
-
-    if archivo_daily is None or archivo_collahuasi is None:
-        st.warning("Carga ambos archivos para iniciar la revisión.")
+    if not archivo_daily or not archivo_collahuasi:
+        st.info("Carga ambos archivos para iniciar la revisión.")
         return
 
     if st.button("Comparar detenciones", type="primary"):
