@@ -63,8 +63,12 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica el estilo visual corporativo de la app Procesador de archivos,
-    usando la imagen ubicada en assets/fondo_finning_upscayl.png.
+    Replica el estilo visual de la app Procesador de archivos,
+    usando el fondo desde la carpeta assets.
+
+    Importante:
+    - No se usa base64 para el fondo porque la imagen es pesada.
+    - Streamlit Cloud sirve los archivos estáticos del repositorio usando la ruta app/assets/...
     """
     ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
 
@@ -75,269 +79,179 @@ def aplicar_fondo_corporativo():
         )
         return
 
-    fondo_base64 = base64.b64encode(ruta_fondo.read_bytes()).decode()
+    fondo_url = "app/assets/fondo_finning_upscayl.png"
 
-    st.markdown(
-        f"""
-        <style>
-        html, body {{
-            background: transparent !important;
-        }}
+    css = """
+    <style>
+    html, body {
+        background: transparent !important;
+    }
 
-        /* Fondo general de la aplicación */
-        .stApp,
-        [data-testid="stAppViewContainer"] {{
-            background-image:
-                linear-gradient(
-                    180deg,
-                    rgba(11, 13, 18, 0.78) 0px,
-                    rgba(11, 13, 18, 0.40) 150px,
-                    rgba(255, 255, 255, 0.06) 330px,
-                    rgba(255, 255, 255, 0.06) 100%
-                ),
-                url("data:image/png;base64,{fondo_base64}") !important;
-            background-size: cover !important;
-            background-position: center top !important;
-            background-repeat: no-repeat !important;
-            background-attachment: fixed !important;
-        }}
+    .stApp,
+    [data-testid="stAppViewContainer"] {
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(11, 13, 18, 0.78) 0px,
+                rgba(11, 13, 18, 0.40) 150px,
+                rgba(255, 255, 255, 0.06) 330px,
+                rgba(255, 255, 255, 0.06) 100%
+            ),
+            url("__FONDO_URL__") !important;
+        background-size: cover !important;
+        background-position: center top !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+    }
 
-        /* Estructura interna transparente */
-        [data-testid="stAppViewContainer"] > .main,
-        section.main,
-        [data-testid="stMain"],
-        [data-testid="stMainBlockContainer"] {{
-            background: transparent !important;
-        }}
+    [data-testid="stAppViewContainer"] > .main,
+    section.main,
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] {
+        background: transparent !important;
+    }
 
-        /* Header superior de Streamlit transparente */
-        [data-testid="stHeader"] {{
-            background: transparent !important;
-        }}
+    [data-testid="stHeader"] {
+        background: transparent !important;
+    }
 
-        /* Contenedor principal flotante */
-        .block-container {{
-            max-width: 980px !important;
-            background-color: rgba(255, 255, 255, 0.75) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            padding: 2.5rem 3rem !important;
-            border-radius: 18px !important;
-            border-top: 8px solid #FFCD11 !important;
-            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
-            margin-top: 2rem !important;
-            margin-bottom: 2rem !important;
-        }}
+    .block-container {
+        max-width: 980px !important;
+        background-color: rgba(255, 255, 255, 0.75) !important;
+        padding: 2.5rem 3rem !important;
+        border-radius: 18px !important;
+        border-top: 8px solid #FFCD11 !important;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
+        margin-top: 2rem !important;
+        margin-bottom: 2rem !important;
+    }
 
-        /* Tarjeta superior negra */
-        .header-card {{
-            background-color: rgba(0, 0, 0, 0.96) !important;
-            padding: 42px 34px !important;
-            border-radius: 20px !important;
-            border-bottom: 8px solid #FFCD11 !important;
-            margin-bottom: 34px !important;
-            min-height: 230px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
-        }}
+    .header-card {
+        background-color: rgba(0, 0, 0, 0.96) !important;
+        padding: 42px 34px !important;
+        border-radius: 20px !important;
+        border-bottom: 8px solid #FFCD11 !important;
+        margin-bottom: 34px !important;
+        min-height: 230px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
+    }
 
-        .header-title {{
-            color: #FFFFFF !important;
-            font-size: 48px !important;
-            font-weight: 800 !important;
-            line-height: 1.15 !important;
-            margin-bottom: 18px !important;
-        }}
+    .header-title {
+        color: #FFFFFF !important;
+        font-size: 48px !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+        margin-bottom: 18px !important;
+    }
 
-        .header-subtitle {{
-            color: #E8E8E8 !important;
-            font-size: 20px !important;
-            line-height: 1.6 !important;
-            font-weight: 400 !important;
-            margin: 0 !important;
-        }}
+    .header-subtitle {
+        color: #E8E8E8 !important;
+        font-size: 20px !important;
+        line-height: 1.6 !important;
+        font-weight: 400 !important;
+        margin: 0 !important;
+    }
 
-        h1, h2, h3 {{
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }}
+    h1, h2, h3 {
+        color: #000000 !important;
+        font-weight: 800 !important;
+    }
 
-        .block-container > div label,
-        .block-container > div span {{
-            color: #111111 !important;
-        }}
+    .block-container > div label,
+    .block-container > div span {
+        color: #111111 !important;
+    }
 
-        /* Menú lateral flotante */
-        section[data-testid="stSidebar"] {{
-            background: transparent !important;
-        }}
+    section[data-testid="stSidebar"] {
+        background: transparent !important;
+    }
 
-        section[data-testid="stSidebar"] > div:first-child {{
-            background: rgba(11, 13, 18, 0.93) !important;
-            margin: 1rem 0 1rem 1rem !important;
-            border-radius: 18px !important;
-            border: 1px solid rgba(255, 205, 17, 0.35) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
-        }}
+    section[data-testid="stSidebar"] > div:first-child {
+        background: rgba(11, 13, 18, 0.93) !important;
+        margin: 1rem 0 1rem 1rem !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(255, 205, 17, 0.35) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
+    }
 
-        section[data-testid="stSidebar"] * {{
-            color: #FFFFFF !important;
-        }}
+    section[data-testid="stSidebar"] * {
+        color: #FFFFFF !important;
+    }
 
-        section[data-testid="stSidebar"] .stButton > button {{
-            background-color: #FFCD11 !important;
-            color: #000000 !important;
-            border: 2px solid #000000 !important;
-            border-radius: 8px !important;
-            font-weight: 800 !important;
-        }}
+    [data-testid="collapsedControl"] {
+        background: rgba(11, 13, 18, 0.90) !important;
+        border-radius: 10px !important;
+        padding: 6px !important;
+    }
 
-        section[data-testid="stSidebar"] .stButton > button:hover {{
-            background-color: #000000 !important;
-            color: #FFCD11 !important;
-            border: 2px solid #FFCD11 !important;
-        }}
+    [data-testid="collapsedControl"] svg {
+        fill: #FFCD11 !important;
+    }
 
-        /* Botón de abrir/cerrar sidebar */
-        [data-testid="collapsedControl"] {{
-            background: rgba(11, 13, 18, 0.90) !important;
-            border-radius: 10px !important;
-            padding: 6px !important;
-        }}
+    section[data-testid="stFileUploaderDropzone"] {
+        background-color: rgba(255, 255, 255, 0.70) !important;
+        border: 2px dashed #FFCD11 !important;
+        border-radius: 14px !important;
+        padding: 22px !important;
+    }
 
-        [data-testid="collapsedControl"] svg {{
-            fill: #FFCD11 !important;
-        }}
+    section[data-testid="stFileUploaderDropzone"] p,
+    section[data-testid="stFileUploaderDropzone"] span,
+    section[data-testid="stFileUploaderDropzone"] small {
+        color: #111111 !important;
+    }
 
-        /* Selectbox */
-        div[data-baseweb="select"] > div {{
-            background-color: #1F212A !important;
-            color: #FFFFFF !important;
-            border-radius: 8px !important;
-            border: 1px solid #1F212A !important;
-        }}
+    section[data-testid="stFileUploaderDropzone"] button {
+        background-color: #FFCD11 !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+    }
 
-        div[data-baseweb="select"] span {{
-            color: #FFFFFF !important;
-        }}
+    section[data-testid="stFileUploaderDropzone"] button:hover {
+        background-color: #000000 !important;
+        color: #FFCD11 !important;
+        border: 2px solid #FFCD11 !important;
+    }
 
-        /* Cargador de archivos */
-        section[data-testid="stFileUploaderDropzone"] {{
-            background-color: rgba(255, 255, 255, 0.70) !important;
-            border: 2px dashed #FFCD11 !important;
-            border-radius: 14px !important;
-            padding: 22px !important;
-        }}
+    .stButton > button {
+        background-color: #FFCD11 !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+        border-radius: 8px !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 800 !important;
+        text-transform: uppercase;
+    }
 
-        section[data-testid="stFileUploaderDropzone"] p,
-        section[data-testid="stFileUploaderDropzone"] span,
-        section[data-testid="stFileUploaderDropzone"] small {{
-            color: #111111 !important;
-        }}
+    .stButton > button:hover {
+        background-color: #000000 !important;
+        color: #FFCD11 !important;
+        border: 2px solid #FFCD11 !important;
+    }
 
-        section[data-testid="stFileUploaderDropzone"] button {{
-            background-color: #FFCD11 !important;
-            color: #000000 !important;
-            border: 2px solid #000000 !important;
-            border-radius: 8px !important;
-            font-weight: 800 !important;
-        }}
+    .stDownloadButton > button {
+        background-color: #000000 !important;
+        color: #FFFFFF !important;
+        border: 2px solid #FFCD11 !important;
+        border-radius: 8px !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 800 !important;
+    }
 
-        section[data-testid="stFileUploaderDropzone"] button:hover {{
-            background-color: #000000 !important;
-            color: #FFCD11 !important;
-            border: 2px solid #FFCD11 !important;
-        }}
+    .stDownloadButton > button:hover {
+        background-color: #FFCD11 !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+    }
+    </style>
+    """
 
-        /* Botones normales */
-        .stButton > button {{
-            background-color: #FFCD11 !important;
-            color: #000000 !important;
-            border: 2px solid #000000 !important;
-            border-radius: 8px !important;
-            padding: 0.6rem 1.2rem !important;
-            font-weight: 800 !important;
-            text-transform: uppercase !important;
-        }}
-
-        .stButton > button p,
-        .stButton > button span,
-        .stButton > button div {{
-            color: #000000 !important;
-            opacity: 1 !important;
-            font-weight: 800 !important;
-        }}
-
-        .stButton > button:hover {{
-            background-color: #000000 !important;
-            color: #FFCD11 !important;
-            border: 2px solid #FFCD11 !important;
-        }}
-
-        .stButton > button:hover p,
-        .stButton > button:hover span,
-        .stButton > button:hover div {{
-            color: #FFCD11 !important;
-        }}
-
-        /* Botón de descarga */
-        .stDownloadButton > button {{
-            background-color: #000000 !important;
-            color: #FFFFFF !important;
-            border: 2px solid #FFCD11 !important;
-            border-radius: 8px !important;
-            padding: 0.6rem 1.2rem !important;
-            font-weight: 800 !important;
-        }}
-
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {{
-            color: #FFFFFF !important;
-            opacity: 1 !important;
-            font-weight: 800 !important;
-        }}
-
-        .stDownloadButton > button:hover {{
-            background-color: #FFCD11 !important;
-            color: #000000 !important;
-            border: 2px solid #000000 !important;
-        }}
-
-        .stDownloadButton > button:hover p,
-        .stDownloadButton > button:hover span,
-        .stDownloadButton > button:hover div {{
-            color: #000000 !important;
-        }}
-
-        /* Métricas, tablas y alertas */
-        [data-testid="stMetric"] {{
-            background-color: rgba(255, 255, 255, 0.70) !important;
-            border-radius: 12px !important;
-            padding: 12px !important;
-            border-left: 4px solid #FFCD11 !important;
-        }}
-
-        div[data-testid="stAlert"] {{
-            border-radius: 12px !important;
-        }}
-
-        div[data-testid="stDataFrame"] {{
-            background-color: rgba(255, 255, 255, 0.92) !important;
-            border-radius: 12px !important;
-        }}
-
-        details {{
-            background-color: rgba(255, 255, 255, 0.78) !important;
-            border-radius: 12px !important;
-            padding: 0.4rem 0.7rem !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown(css.replace("__FONDO_URL__", fondo_url), unsafe_allow_html=True)
 
 
 def mostrar_encabezado_corporativo():
@@ -346,7 +260,7 @@ def mostrar_encabezado_corporativo():
         """
         <div class="header-card">
             <div class="header-title">
-                Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT
+                Revisión de Detenciones AMT
             </div>
             <p class="header-subtitle">
                 Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
