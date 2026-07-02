@@ -62,11 +62,12 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica el fondo corporativo Finning/CAT desde la carpeta assets.
+    Aplica fondo corporativo Finning/CAT desde la carpeta assets.
 
-    Ruta esperada en GitHub / Streamlit Cloud:
+    Ruta esperada:
     assets/fondo_finning_upscayl.png
     """
+
     ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
 
     if not ruta_fondo.exists():
@@ -81,39 +82,53 @@ def aplicar_fondo_corporativo():
     st.markdown(
         f"""
         <style>
-        [data-testid="stAppViewContainer"] {{
+        /* Fondo general de la app */
+        .stApp {{
             background-image:
-                linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)),
+                linear-gradient(
+                    rgba(255, 255, 255, 0.18),
+                    rgba(255, 255, 255, 0.18)
+                ),
                 url("data:image/png;base64,{fondo_base64}");
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
 
+        /* Contenedor principal transparente para que se vea el fondo */
+        [data-testid="stAppViewContainer"] {{
+            background: transparent;
+        }}
+
+        [data-testid="stAppViewContainer"] > .main {{
+            background: transparent;
+        }}
+
+        /* Header superior transparente */
         [data-testid="stHeader"] {{
             background: rgba(255, 255, 255, 0);
         }}
 
+        /* Barra lateral */
         [data-testid="stSidebar"] > div:first-child {{
             background: rgba(17, 24, 39, 0.94);
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
         }}
 
+        /* Caja principal estilo corporativo */
         .block-container {{
-            background: rgba(255, 255, 255, 0.86);
-            border-radius: 22px;
+            max-width: 1280px;
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 24px;
             border-top: 8px solid #ffcc00;
-            padding: 2.5rem 3rem 3rem 3rem;
+            padding: 2.6rem 3rem 3rem 3rem;
             margin-top: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
         }}
 
-        h1, h2, h3, h4, h5, h6, p, label, span, div {{
-            text-shadow: none;
-        }}
-
+        /* Texto general dentro de la caja principal */
         .block-container h1,
         .block-container h2,
         .block-container h3,
@@ -122,46 +137,89 @@ def aplicar_fondo_corporativo():
         .block-container h6,
         .block-container p,
         .block-container label,
-        .block-container span {{
+        .block-container span,
+        .block-container div {{
             color: #111827;
+            text-shadow: none;
         }}
 
+        /* Texto de la barra lateral */
         [data-testid="stSidebar"] h1,
         [data-testid="stSidebar"] h2,
         [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4,
         [data-testid="stSidebar"] p,
         [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span {{
+        [data-testid="stSidebar"] span,
+        [data-testid="stSidebar"] div {{
             color: #ffffff;
         }}
 
+        /* Separación visual de los cargadores */
         div[data-testid="stFileUploader"] {{
-            background-color: rgba(255, 255, 255, 0.68);
+            background-color: rgba(255, 255, 255, 0.62);
             border: 2px dashed #ffcc00;
             border-radius: 14px;
-            padding: 12px;
+            padding: 14px;
         }}
 
+        div[data-testid="stFileUploader"] section {{
+            background-color: rgba(31, 41, 55, 0.92);
+            border-radius: 10px;
+        }}
+
+        div[data-testid="stFileUploader"] button {{
+            background-color: #ffcc00;
+            color: #111827;
+            border: 2px solid #111827;
+            border-radius: 8px;
+            font-weight: 700;
+        }}
+
+        /* Botón principal */
         div.stButton > button:first-child {{
-            border-radius: 10px;
-            border: 2px solid #111827;
-            background: #ffcc00;
+            background-color: #ffcc00;
             color: #111827;
+            border: 2px solid #111827;
+            border-radius: 10px;
             font-weight: 700;
         }}
 
-        div.stDownloadButton > button:first-child {{
-            border-radius: 10px;
-            border: 2px solid #111827;
-            background: #ffcc00;
+        div.stButton > button:first-child:hover {{
+            background-color: #f2b800;
             color: #111827;
+            border: 2px solid #111827;
+        }}
+
+        /* Botones de descarga */
+        div.stDownloadButton > button:first-child {{
+            background-color: #ffcc00;
+            color: #111827;
+            border: 2px solid #111827;
+            border-radius: 10px;
             font-weight: 700;
+        }}
+
+        div.stDownloadButton > button:first-child:hover {{
+            background-color: #f2b800;
+            color: #111827;
+            border: 2px solid #111827;
+        }}
+
+        /* Alertas */
+        div[data-testid="stAlert"] {{
+            border-radius: 12px;
+        }}
+
+        /* Dataframes */
+        div[data-testid="stDataFrame"] {{
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 12px;
         }}
         </style>
         """,
         unsafe_allow_html=True,
     )
-
 
 def truncar_a_minuto(valor):
     """Devuelve datetime sin segundos ni microsegundos para comparaciones contra AMT."""
