@@ -327,16 +327,16 @@ def aplicar_fondo_corporativo():
     }
 
      /* Franja informativa verde */
-        .franja-info-verde {
-        background-color: rgba(187, 247, 208, 0.70) !important;
-        color: #22c55e !important;
-        border-radius: 10px !important;
-        padding: 18px 20px !important;
-        margin-top: 20px !important;
-        margin-bottom: 20px !important;
-        font-size: 18px !important;
-        font-weight: 500 !important;
-        border: 1px solid rgba(134, 239, 172, 0.65) !important;
+    .franja-info-verde {
+    background-color: rgba(187, 247, 208, 0.70) !important;
+    color: #22c55e !important;
+    border-radius: 10px !important;
+    padding: 18px 20px !important;
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    border: 1px solid rgba(134, 239, 172, 0.65) !important;
     }
 
     .franja-info-verde strong {
