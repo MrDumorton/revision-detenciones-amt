@@ -1913,15 +1913,24 @@ def main():
     max_gap_in_progress_horas = 0
 
     if archivo_daily is None or archivo_collahuasi is None:
+        st.markdown(
+            """
+            <div class="franja-info-verde">
+                Carga ambos archivos para iniciar la revisión.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        return
+
     st.markdown(
         """
         <div class="franja-info-verde">
-            Carga ambos archivos para iniciar la revisión.
+            Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
         </div>
         """,
         unsafe_allow_html=True
     )
-    return
 
     if st.button("Comparar detenciones", type="primary"):
         with st.spinner("Leyendo archivos y comparando registros..."):
@@ -1930,6 +1939,7 @@ def main():
                     archivo_daily,
                     detectar_in_progress_por_0800=detectar_in_progress_por_0800,
                 )
+
                 df_collahuasi = leer_detenciones_collahuasi(archivo_collahuasi)
 
                 df_resultado, df_eventos_error, df_amt_sin_coll = comparar_detenciones(
@@ -1978,15 +1988,30 @@ def main():
 
         st.success("Revisión finalizada.")
 
-        rango_txt = f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}" if rango_inicio and rango_termino else "No detectado"
+        rango_txt = (
+            f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}"
+            if rango_inicio and rango_termino
+            else "No detectado"
+        )
+
         total = len(df_resultado)
-        hallazgos = len(df_resultado[df_resultado["resultado"] != "OK"]) if not df_resultado.empty else 0
-        pendientes_amt = len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"]) if not df_resultado.empty else 0
-        otros_hallazgos = len(df_resultado[(df_resultado["resultado"] != "OK") & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")]) if not df_resultado.empty else 0
-        correctos = len(df_resultado[df_resultado["resultado"] == "OK"]) if not df_resultado.empty else 0
+        pendientes_amt = (
+            len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"])
+            if not df_resultado.empty
+            else 0
+        )
+        correctos = (
+            len(df_resultado[df_resultado["resultado"] == "OK"])
+            if not df_resultado.empty
+            else 0
+        )
 
         total_in_progress = len(df_in_progress) if not df_in_progress.empty else 0
-        errores_in_progress = len(df_in_progress[df_in_progress["resultado"] == "ERROR"]) if total_in_progress else 0
+        errores_in_progress = (
+            len(df_in_progress[df_in_progress["resultado"] == "ERROR"])
+            if total_in_progress
+            else 0
+        )
 
         c1, c2, c3, c4, c5 = st.columns(5)
         c1.metric("Rango Daily", rango_txt)
@@ -1995,20 +2020,38 @@ def main():
         c4.metric("Pendientes AMT", pendientes_amt)
         c5.metric("In Progress", f"{total_in_progress} / {errores_in_progress} alerta")
 
-        df_pendientes_amt = df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy() if not df_resultado.empty else pd.DataFrame()
-        df_diferencias_tiempo = df_resultado[
-            (df_resultado["resultado"] != "OK") &
-            (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
-        ].copy() if not df_resultado.empty else pd.DataFrame()
+        df_pendientes_amt = (
+            df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy()
+            if not df_resultado.empty
+            else pd.DataFrame()
+        )
+
+        df_diferencias_tiempo = (
+            df_resultado[
+                (df_resultado["resultado"] != "OK")
+                & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
+            ].copy()
+            if not df_resultado.empty
+            else pd.DataFrame()
+        )
 
         st.subheader("Detenciones pendientes de ingreso en AMT")
+
         if df_pendientes_amt.empty:
             st.success("No se detectaron detenciones pendientes de ingreso en AMT.")
         else:
             columnas_pendientes = [
-                "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
-                "duracion_collahuasi_h", "errores", "razon_collahuasi", "comentario_collahuasi"
+                "fila_collahuasi",
+                "equipo",
+                "inicio_collahuasi",
+                "termino_collahuasi",
+                "duracion_collahuasi_h",
+                "errores",
+                "razon_collahuasi",
+                "comentario_collahuasi",
             ]
+            columnas_pendientes = [c for c in columnas_pendientes if c in df_pendientes_amt.columns]
+
             st.dataframe(
                 df_pendientes_amt[columnas_pendientes],
                 use_container_width=True,
@@ -2016,14 +2059,27 @@ def main():
             )
 
         st.subheader("Diferencia en los tiempos de la detención")
+
         if df_diferencias_tiempo.empty:
             st.success("No se detectaron diferencias en los tiempos de la detención.")
         else:
             columnas_diferencias = [
-                "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
-                "inicio_amt", "termino_amt", "duracion_collahuasi_h", "duracion_amt_h",
-                "errores", "observaciones", "razon_collahuasi", "comentario_collahuasi", "descripcion_amt"
+                "fila_collahuasi",
+                "equipo",
+                "inicio_collahuasi",
+                "termino_collahuasi",
+                "inicio_amt",
+                "termino_amt",
+                "duracion_collahuasi_h",
+                "duracion_amt_h",
+                "errores",
+                "observaciones",
+                "razon_collahuasi",
+                "comentario_collahuasi",
+                "descripcion_amt",
             ]
+            columnas_diferencias = [c for c in columnas_diferencias if c in df_diferencias_tiempo.columns]
+
             st.dataframe(
                 df_diferencias_tiempo[columnas_diferencias],
                 use_container_width=True,
@@ -2031,19 +2087,29 @@ def main():
             )
 
         st.subheader("Hallazgos de cortes / continuidad por evento")
+
         if df_eventos_error.empty:
             st.info("No se detectaron hallazgos agrupados por evento.")
         else:
-            st.dataframe(df_eventos_error, use_container_width=True, hide_index=True)
+            st.dataframe(
+                df_eventos_error,
+                use_container_width=True,
+                hide_index=True,
+            )
 
         st.subheader("Revisión detenciones In Progress")
+
         if df_in_progress.empty:
             st.info("No se detectaron eventos In Progress con la configuración actual.")
         else:
-            st.dataframe(df_in_progress, use_container_width=True, hide_index=True)
-
+            st.dataframe(
+                df_in_progress,
+                use_container_width=True,
+                hide_index=True,
+            )
 
         d1, d2 = st.columns(2)
+
         with d1:
             st.download_button(
                 "📄 Descargar informe PDF",
@@ -2051,6 +2117,7 @@ def main():
                 file_name="informe_revision_detenciones.pdf",
                 mime="application/pdf",
             )
+
         with d2:
             st.download_button(
                 "📊 Descargar detalle Excel",
@@ -2060,7 +2127,11 @@ def main():
             )
 
         with st.expander("Ver todos los registros revisados"):
-            st.dataframe(df_resultado, use_container_width=True, hide_index=True)
+            st.dataframe(
+                df_resultado,
+                use_container_width=True,
+                hide_index=True,
+            )
 
 
 if __name__ == "__main__":
