@@ -29,7 +29,7 @@ from reportlab.platypus import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Revisión de Detenciones AMT vs Collahuasi",
+    page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -63,16 +63,14 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Replica la estructura visual de la app Procesador de archivos usando static/.
-
-    Ruta esperada en GitHub / Streamlit Cloud:
-    static/fondo_finning_upscayl.png
+    Aplica el estilo visual corporativo igual a la app Procesador de archivos.
+    Usa la carpeta static para cargar el fondo.
     """
+
     ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
 
     if not ruta_fondo.exists():
         st.error(f"No se encontró la imagen de fondo en: {ruta_fondo}")
-        return
 
     fondo_url = "app/static/fondo_finning_upscayl.png"
 
@@ -115,35 +113,35 @@ def aplicar_fondo_corporativo():
 
     /* Contenedor principal flotante */
     .block-container {
-        max-width: 980px;
-        background-color: rgba(255, 255, 255, 0.75);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        padding: 2.5rem 3rem;
-        border-radius: 18px;
-        border-top: 8px solid #FFCD11;
-        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28);
-        margin-top: 2rem;
-        margin-bottom: 2rem;
+        max-width: 980px !important;
+        background-color: rgba(255, 255, 255, 0.75) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        padding: 2.5rem 3rem !important;
+        border-radius: 18px !important;
+        border-top: 8px solid #FFCD11 !important;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
+        margin-top: 2rem !important;
+        margin-bottom: 2rem !important;
     }
 
     /* Tarjeta superior negra */
     .header-card {
-        background-color: rgba(0, 0, 0, 0.96);
-        padding: 42px 34px;
-        border-radius: 20px;
-        border-bottom: 8px solid #FFCD11;
-        margin-bottom: 34px;
-        min-height: 230px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25);
+        background-color: rgba(0, 0, 0, 0.96) !important;
+        padding: 42px 34px !important;
+        border-radius: 20px !important;
+        border-bottom: 8px solid #FFCD11 !important;
+        margin-bottom: 34px !important;
+        min-height: 230px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
     }
 
     .header-title {
         color: #FFFFFF !important;
-        font-size: 48px !important;
+        font-size: 44px !important;
         font-weight: 800 !important;
         line-height: 1.15 !important;
         margin-bottom: 18px !important;
@@ -174,10 +172,10 @@ def aplicar_fondo_corporativo():
 
     section[data-testid="stSidebar"] > div:first-child {
         background: rgba(11, 13, 18, 0.93) !important;
-        margin: 1rem 0 1rem 1rem;
-        border-radius: 18px;
-        border: 1px solid rgba(255, 205, 17, 0.35);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+        margin: 1rem 0 1rem 1rem !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(255, 205, 17, 0.35) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
     }
 
     section[data-testid="stSidebar"] * {
@@ -218,6 +216,19 @@ def aplicar_fondo_corporativo():
     }
 
     div[data-baseweb="select"] span {
+        color: #FFFFFF !important;
+    }
+
+    /* Number input */
+    div[data-testid="stNumberInput"] input {
+        background-color: #1F212A !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        border: 1px solid #1F212A !important;
+    }
+
+    /* Checkbox */
+    div[data-testid="stCheckbox"] label span {
         color: #FFFFFF !important;
     }
 
@@ -309,22 +320,45 @@ def aplicar_fondo_corporativo():
     .stDownloadButton > button:hover div {
         color: #000000 !important;
     }
+
+    /* Alertas */
+    div[data-testid="stAlert"] {
+        border-radius: 12px !important;
+        background-color: rgba(255, 246, 160, 0.72) !important;
+    }
+
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] div {
+        color: #111111 !important;
+    }
+
+    /* Tablas */
+    div[data-testid="stDataFrame"] {
+        background-color: rgba(255, 255, 255, 0.92) !important;
+        border-radius: 12px !important;
+    }
+
+    /* Expander */
+    details {
+        background: rgba(255, 255, 255, 0.80) !important;
+        border-radius: 12px !important;
+        padding: 0.35rem 0.75rem !important;
+    }
     </style>
     """
 
     st.markdown(
         css.replace("__FONDO_URL__", fondo_url),
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
 
 def mostrar_encabezado_corporativo():
-    """Muestra la tarjeta negra superior con el mismo estilo de la app Procesador."""
     st.markdown(
         """
         <div class="header-card">
             <div class="header-title">
-                Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT
+                Revisión de Detenciones AMT
             </div>
             <p class="header-subtitle">
                 Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
@@ -1820,23 +1854,37 @@ def main():
     mostrar_encabezado_corporativo()
 
     col1, col2 = st.columns(2)
+
     with col1:
-        archivo_daily = st.file_uploader("1. Cargar DailyDowntimeLog.xlsx", type=["xlsx"])
+        archivo_daily = st.file_uploader(
+            "1. Cargar DailyDowntimeLog.xlsx",
+            type=["xlsx"],
+            key="archivo_daily"
+        )
+
     with col2:
-        archivo_collahuasi = st.file_uploader("2. Cargar DETENCIONES COLLAHUASI 2026.xlsx", type=["xlsx"])
+        archivo_collahuasi = st.file_uploader(
+            "2. Cargar DETENCIONES COLLAHUASI 2026.xlsx",
+            type=["xlsx"],
+            key="archivo_collahuasi"
+        )
 
     st.sidebar.header("Configuración")
+
     # Tolerancia fija: 0 minutos.
     # Según la lógica solicitada, no debe existir diferencia permitida entre los tiempos.
     tolerancia_minutos = 0
+
     filtrar_por_rango_daily = st.sidebar.checkbox(
         "Validar solo registros Collahuasi dentro del rango DailyDowntimeLog",
         value=True,
     )
+
     validar_continuidad = st.sidebar.checkbox(
         "Validar gaps/solapamientos entre cortes Collahuasi",
         value=True,
     )
+
     # La cobertura total del evento AMT se valida siempre según la lógica solicitada:
     # AMT debe cubrir el inicio y término de la detención continua indicada en Collahuasi.
     validar_cobertura_total = True
@@ -1844,11 +1892,11 @@ def main():
     # Parámetros In Progress fijos según la lógica definida.
     # No se muestran en la barra lateral para evitar cambios manuales de criterio.
     detectar_in_progress_por_0800 = False
-    ventana_in_progress_horas = 168
-    max_gap_in_progress_horas = 2.0
+    ventana_in_progress_horas = 12
+    max_gap_in_progress_horas = 0
 
     if archivo_daily is None or archivo_collahuasi is None:
-        st.warning("Carga ambos archivos para iniciar la revisión.")
+        st.info("Carga ambos archivos para iniciar la revisión.")
         return
 
     if st.button("Comparar detenciones", type="primary"):
