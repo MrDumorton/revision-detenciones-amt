@@ -113,7 +113,8 @@ def aplicar_fondo_corporativo():
 
     /* Contenedor principal flotante */
     .block-container {
-        max-width: 980px !important;
+        width: min(1500px, calc(100vw - 80px)) !important;
+        max-width: 1500px !important;
         background-color: rgba(255, 255, 255, 0.75) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -123,6 +124,15 @@ def aplicar_fondo_corporativo():
         box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
         margin-top: 2rem !important;
         margin-bottom: 2rem !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    div[data-testid="stDataFrame"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    border-radius: 12px !important;
     }
 
     /* Tarjeta superior negra */
