@@ -323,8 +323,25 @@ def aplicar_fondo_corporativo():
 
     /* Alertas */
     div[data-testid="stAlert"] {
-        border-radius: 12px !important;
-        background-color: rgba(255, 246, 160, 0.72) !important;
+    border-radius: 12px !important;
+    }
+
+     /* Franja informativa verde */
+        .franja-info-verde {
+        background-color: rgba(187, 247, 208, 0.70) !important;
+        color: #22c55e !important;
+        border-radius: 10px !important;
+        padding: 18px 20px !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        font-size: 18px !important;
+        font-weight: 500 !important;
+        border: 1px solid rgba(134, 239, 172, 0.65) !important;
+    }
+
+    .franja-info-verde strong {
+        color: #16a34a !important;
+        font-weight: 700 !important;
     }
 
     div[data-testid="stAlert"] p,
@@ -1896,8 +1913,15 @@ def main():
     max_gap_in_progress_horas = 0
 
     if archivo_daily is None or archivo_collahuasi is None:
-        st.info("Carga ambos archivos para iniciar la revisión.")
-        return
+    st.markdown(
+        """
+        <div class="franja-info-verde">
+            Carga ambos archivos para iniciar la revisión.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    return
 
     if st.button("Comparar detenciones", type="primary"):
         with st.spinner("Leyendo archivos y comparando registros..."):
