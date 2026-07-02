@@ -32,6 +32,7 @@ st.set_page_config(
     page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 MESES = {
@@ -63,9 +64,7 @@ EPS_HORAS = 1e-6
 def aplicar_fondo_corporativo():
     """
     Aplica el fondo corporativo Finning/CAT desde la carpeta assets.
-
-    Ruta esperada en GitHub / Streamlit Cloud:
-    assets/fondo_finning_upscayl.png
+    Deja la app con un estilo visual similar a la segunda imagen de referencia.
     """
 
     ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
@@ -83,49 +82,48 @@ def aplicar_fondo_corporativo():
         f"""
         <style>
         /* =====================================================
-           Fondo corporativo
+           FONDO GENERAL
            ===================================================== */
+        html, body, .stApp {{
+            background: transparent !important;
+        }}
 
-        html,
-        body,
-        .stApp,
-        [data-testid="stAppViewContainer"],
-        [data-testid="stMain"],
+        .stApp {{
+            background-image:
+                linear-gradient(
+                    rgba(255, 255, 255, 0.22),
+                    rgba(255, 255, 255, 0.22)
+                ),
+                url("data:image/png;base64,{fondo_base64}") !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }}
+
+        [data-testid="stAppViewContainer"] {{
+            background: transparent !important;
+        }}
+
+        [data-testid="stAppViewContainer"] > .main {{
+            background: transparent !important;
+        }}
+
+        [data-testid="stMain"] {{
+            background: transparent !important;
+        }}
+
         [data-testid="stMainBlockContainer"] {{
             background: transparent !important;
         }}
 
-        .stApp::before {{
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background-image:
-                linear-gradient(
-                    rgba(255, 255, 255, 0.16),
-                    rgba(255, 255, 255, 0.16)
-                ),
-                url("data:image/png;base64,{fondo_base64}");
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-
-        .stApp > * {{
-            position: relative;
-            z-index: 1;
-        }}
-
         [data-testid="stHeader"] {{
-            background: transparent !important;
+            background: rgba(0, 0, 0, 0.12) !important;
         }}
 
         /* =====================================================
-           Barra lateral
+           SIDEBAR
            ===================================================== */
-
         [data-testid="stSidebar"] > div:first-child {{
             background: rgba(17, 24, 39, 0.94) !important;
             backdrop-filter: blur(4px);
@@ -143,46 +141,81 @@ def aplicar_fondo_corporativo():
         }}
 
         /* =====================================================
-           Contenedor principal
+           CONTENEDOR PRINCIPAL BLANCO
            ===================================================== */
-
         .block-container {{
-            max-width: 1320px !important;
-            background: rgba(255, 255, 255, 0.68) !important;
-            border-radius: 24px !important;
+            max-width: 1100px !important;
+            background: rgba(255, 255, 255, 0.78) !important;
+            border-radius: 26px !important;
             border-top: 8px solid #ffcc00 !important;
-            padding: 2.4rem 3rem 3rem 3rem !important;
-            margin-top: 2rem !important;
+            padding: 1.5rem 3rem 2.5rem 3rem !important;
+            margin-top: 1.2rem !important;
             margin-bottom: 2rem !important;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30) !important;
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.28) !important;
             backdrop-filter: blur(2px);
         }}
 
-        .block-container h1 {{
-            font-size: clamp(2.1rem, 3.1vw, 3.1rem) !important;
-            line-height: 1.12 !important;
-            color: #111827 !important;
+        /* Ocultar margen extra del título Streamlit */
+        .block-container h1:first-of-type {{
+            display: none !important;
         }}
 
+        /* =====================================================
+           HERO SUPERIOR NEGRO
+           ===================================================== */
+        .hero-panel {{
+            background: rgba(0, 0, 0, 0.96);
+            color: white;
+            border-radius: 24px;
+            padding: 2.3rem 2.4rem 2rem 2.4rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.30);
+            border-bottom: 10px solid #ffcc00;
+        }}
+
+        .hero-title {{
+            margin: 0 0 1rem 0;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.1;
+            font-weight: 800;
+            color: #ffffff !important;
+        }}
+
+        .hero-subtitle {{
+            margin: 0;
+            font-size: 1.05rem;
+            color: #ffffff !important;
+        }}
+
+        /* =====================================================
+           TEXTO GENERAL
+           ===================================================== */
+        .block-container,
+        .block-container p,
+        .block-container label,
+        .block-container span,
+        .block-container div,
         .block-container h2,
         .block-container h3,
         .block-container h4,
         .block-container h5,
-        .block-container h6,
-        .block-container p,
-        .block-container label,
-        .block-container span,
-        .block-container div {{
+        .block-container h6 {{
             color: #111827 !important;
             text-shadow: none !important;
         }}
 
         /* =====================================================
-           Cargadores de archivo
+           ZONA CARGADORES
            ===================================================== */
+        .upload-panel {{
+            background: rgba(255, 243, 205, 0.55);
+            border-radius: 18px;
+            padding: 1.2rem 1.2rem 0.4rem 1.2rem;
+            margin-bottom: 1.5rem;
+        }}
 
         div[data-testid="stFileUploader"] {{
-            background-color: rgba(255, 255, 255, 0.55) !important;
+            background-color: rgba(255, 255, 255, 0.25) !important;
             border: 2px dashed #ffcc00 !important;
             border-radius: 14px !important;
             padding: 14px !important;
@@ -202,9 +235,8 @@ def aplicar_fondo_corporativo():
         }}
 
         /* =====================================================
-           Botones
+           BOTONES
            ===================================================== */
-
         div.stButton > button:first-child,
         div.stDownloadButton > button:first-child {{
             background-color: #ffcc00 !important;
@@ -222,9 +254,8 @@ def aplicar_fondo_corporativo():
         }}
 
         /* =====================================================
-           Alertas y tablas
+           ALERTAS Y TABLAS
            ===================================================== */
-
         div[data-testid="stAlert"] {{
             border-radius: 12px !important;
         }}
@@ -233,7 +264,29 @@ def aplicar_fondo_corporativo():
             background-color: rgba(255, 255, 255, 0.92) !important;
             border-radius: 12px !important;
         }}
+
+        /* =====================================================
+           EXPANDER
+           ===================================================== */
+        details {{
+            background: rgba(255, 255, 255, 0.80);
+            border-radius: 12px;
+            padding: 0.35rem 0.75rem;
+        }}
         </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+def mostrar_encabezado_corporativo():
+    st.markdown(
+        """
+        <div class="hero-panel">
+            <h1 class="hero-title">Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT</h1>
+            <p class="hero-subtitle">
+                Carga ambos archivos Excel, compara los registros y genera el informe de revisión.
+            </p>
+        </div>
         """,
         unsafe_allow_html=True,
     )
