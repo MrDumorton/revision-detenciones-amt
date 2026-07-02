@@ -27,7 +27,7 @@ from reportlab.platypus import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Revisión de Detenciones AMT vs Collahuasi",
+    page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
     layout="wide",
 )
@@ -47,8 +47,39 @@ MESES = {
     "dic": 12, "dec": 12,
 }
 
+# Comparación de tiempos:
+# - Para validar si una detención Collahuasi está respaldada en AMT y comparar
+#   inicio/término/duración contra DailyDowntimeLog, se usan fecha, hora y minuto.
+# - Para validar continuidad entre cortes Collahuasi, se conservan horas, minutos y segundos.
+EPS_HORAS = 1e-6
+
+
+def truncar_a_minuto(valor):
+    """Devuelve datetime sin segundos ni microsegundos para comparaciones contra AMT."""
+    if valor is None or pd.isna(valor):
+        return valor
+    if isinstance(valor, pd.Timestamp):
+        valor = valor.to_pydatetime()
+    if isinstance(valor, datetime):
+        return valor.replace(second=0, microsecond=0)
+    return valor
+
+
+def diferencia_mayor(a: float, b: float = 0.0) -> bool:
+    """Compara diferencias en horas evitando falsos positivos por redondeo de coma flotante."""
+    return float(a) > float(b) + EPS_HORAS
+
+
+def diferencia_menor(a: float, b: float = 0.0) -> bool:
+    return float(a) < float(b) - EPS_HORAS
+
+
+def diferencia_abs_mayor(a: float, b: float = 0.0) -> bool:
+    return abs(float(a)) > float(b) + EPS_HORAS
+
 ERROR_DESCRIPCION = {
-    "REGISTRO_COLLAHUASI_SIN_RESPALDO_AMT": "Registro en Collahuasi sin respaldo en DailyDowntimeLog/AMT.",
+    "REGISTRO_COLLAHUASI_SIN_RESPALDO_AMT": "Detención pendiente de ingreso en AMT.",
+    "DETENCION_PENDIENTE_INGRESO_AMT": "Detención registrada en Detenciones Collahuasi, pero pendiente de ingreso en AMT.",
     "TRAMO_INICIA_ANTES_AMT": "El tramo de Collahuasi inicia antes del evento AMT.",
     "TRAMO_TERMINA_DESPUES_AMT": "El tramo de Collahuasi termina después del evento AMT.",
     "DURACION_COLLAHUASI_EXCEDE_AMT": "La suma de tramos Collahuasi excede la duración AMT.",
@@ -77,9 +108,26 @@ def limpiar_texto(valor) -> str:
 
 
 def normalizar_equipo(valor) -> str:
-    txt = limpiar_texto(valor).upper().replace(" ", "")
-    txt = txt.replace("TN-", "TN")
-    return txt
+    """
+    Normaliza el código de equipo para que ambos archivos puedan cruzarse.
+
+    Casos relevantes:
+    - En DailyDowntimeLog el rodillo puede venir como "RO 01" o "RO01".
+    - En Detenciones Collahuasi suele venir como "ROD01".
+    Ambos se homologan a RO01 para evitar falsos "sin respaldo AMT".
+    """
+    txt = limpiar_texto(valor).upper()
+    txt = txt.replace(" ", "").replace("-", "")
+    txt = txt.replace("TN", "TN")
+
+    homologacion = {
+        "ROD01": "RO01",
+        "ROD1": "RO01",
+        "RO01": "RO01",
+        "RO1": "RO01",
+    }
+
+    return homologacion.get(txt, txt)
 
 
 
@@ -173,7 +221,7 @@ def parse_fecha_daily(valor) -> Optional[datetime]:
     if mes is None:
         return None
 
-    return datetime(anio, mes, dia, hora, minuto)
+    return truncar_a_minuto(datetime(anio, mes, dia, hora, minuto))
 
 
 def parse_rango_daily(texto) -> Tuple[Optional[datetime], Optional[datetime]]:
@@ -290,7 +338,13 @@ def duracion_a_horas(valor, fallback=None, numeric_as_excel_time: bool = False) 
 
 
 def horas_entre(inicio: datetime, termino: datetime) -> float:
+    """Diferencia exacta entre datetimes. Se usa para continuidad de cortes con segundos."""
     return (termino - inicio).total_seconds() / 3600
+
+
+def horas_entre_minuto(inicio: datetime, termino: datetime) -> float:
+    """Diferencia ignorando segundos. Se usa para comparar Collahuasi contra AMT."""
+    return horas_entre(truncar_a_minuto(inicio), truncar_a_minuto(termino))
 
 
 def fmt_dt(valor) -> str:
@@ -339,7 +393,7 @@ def es_inicio_referencial_rango(
         inicio_amt = inicio_amt.to_pydatetime()
     if isinstance(rango_inicio, pd.Timestamp):
         rango_inicio = rango_inicio.to_pydatetime()
-    return abs((inicio_amt - rango_inicio).total_seconds()) <= tolerancia_horas * 3600
+    return abs((truncar_a_minuto(inicio_amt) - truncar_a_minuto(rango_inicio)).total_seconds()) <= tolerancia_horas * 3600
 
 
 
@@ -362,7 +416,7 @@ def es_termino_referencial_rango(
         termino_amt = termino_amt.to_pydatetime()
     if isinstance(rango_termino, pd.Timestamp):
         rango_termino = rango_termino.to_pydatetime()
-    return abs((termino_amt - rango_termino).total_seconds()) <= tolerancia_horas * 3600
+    return abs((truncar_a_minuto(termino_amt) - truncar_a_minuto(rango_termino)).total_seconds()) <= tolerancia_horas * 3600
 
 
 
@@ -412,10 +466,9 @@ def es_evento_in_progress(
       Ejemplo: reporte 01-06-2026 08:00 a 19-06-2026 00:00; si varios equipos
       terminan exactamente el 19-06-2026 00:00, probablemente siguen In Progress.
 
-    Criterio opcional:
-    - Considerar cualquier término 08:00 como posible In Progress.
-      Esta opción se deja configurable porque una detención también puede terminar
-      realmente a las 08:00.
+    Criterio fijo:
+    - No se considera cualquier término 08:00 como In Progress por sí solo.
+      El criterio principal queda asociado al término del rango descargado del reporte.
     """
     if inicio is None or termino is None or pd.isna(inicio) or pd.isna(termino):
         return False
@@ -428,8 +481,8 @@ def es_evento_in_progress(
     if rango_termino is not None and not pd.isna(rango_termino):
         if isinstance(rango_termino, pd.Timestamp):
             rango_termino = rango_termino.to_pydatetime()
-        diferencia_seg = abs((termino - rango_termino).total_seconds())
-        if diferencia_seg <= 60:
+        diferencia_seg = abs((truncar_a_minuto(termino) - truncar_a_minuto(rango_termino)).total_seconds())
+        if diferencia_seg <= 0:
             return True
 
     return bool(detectar_cualquier_0800 and es_hora_0800(termino))
@@ -503,14 +556,14 @@ def leer_daily_downtime_log(
         if equipo == "TOTAL":
             break
 
-        inicio = parse_fecha_daily(row.get(col_down))
-        termino = parse_fecha_daily(row.get(col_up))
+        inicio = truncar_a_minuto(parse_fecha_daily(row.get(col_down)))
+        termino = truncar_a_minuto(parse_fecha_daily(row.get(col_up)))
 
         # Si la fila trae equipo e inicio/término, actualiza contexto del evento.
         if equipo and inicio and termino:
-            duracion_horas = duracion_a_horas(row.get(col_horas))
-            if duracion_horas is None:
-                duracion_horas = horas_entre(inicio, termino)
+            # La duración AMT se calcula desde DownDate y Up Date truncados a minuto.
+            # Así se evita que diferencias de segundos generen falsos hallazgos.
+            duracion_horas = horas_entre(inicio, termino)
 
             evento_id = f"{equipo}|{inicio.isoformat()}|{termino.isoformat()}"
             contexto = {
@@ -592,6 +645,10 @@ def leer_detenciones_collahuasi(archivo) -> pd.DataFrame:
             col_tiempo_horas = c
             break
 
+    # Columna H corresponde al término del tramo en la planilla.
+    # Se usa para construir el término real del corte, conservando segundos.
+    col_termino_h = buscar_columna(df.columns, "H")
+
     registros = []
     for idx, row in df.iterrows():
         fila_excel = idx + 6
@@ -600,15 +657,29 @@ def leer_detenciones_collahuasi(archivo) -> pd.DataFrame:
             continue
 
         inicio = combinar_fecha_hora(row.get("Fecha"), row.get("Hora"))
-        duracion_h = duracion_a_horas(row.get("Duracion"), fallback=row.get(col_tiempo_horas) if col_tiempo_horas else None, numeric_as_excel_time=True)
+        termino = None
 
-        if inicio is None or duracion_h is None:
+        if inicio is not None and col_termino_h:
+            termino = combinar_fecha_hora(row.get("Fecha"), row.get(col_termino_h))
+            if termino is not None:
+                # Si la hora término es menor o igual al inicio, corresponde al día siguiente
+                # o al cruce de medianoche del mismo tramo.
+                while termino <= inicio:
+                    termino = termino + timedelta(days=1)
+
+        if inicio is None:
             continue
+
+        if termino is None:
+            duracion_h = duracion_a_horas(row.get("Duracion"), fallback=row.get(col_tiempo_horas) if col_tiempo_horas else None, numeric_as_excel_time=True)
+            if duracion_h is None:
+                continue
+            termino = inicio + timedelta(hours=float(duracion_h))
+
+        duracion_h = horas_entre(inicio, termino)
 
         if duracion_h <= 0:
             continue
-
-        termino = inicio + timedelta(hours=float(duracion_h))
 
         registros.append({
             "fila_collahuasi": fila_excel,
@@ -644,12 +715,128 @@ def traslape_horas(a_ini: datetime, a_fin: datetime, b_ini: datetime, b_fin: dat
 
 
 def distancia_minima_horas(a_ini: datetime, a_fin: datetime, b_ini: datetime, b_fin: datetime) -> float:
-    """Distancia temporal entre dos intervalos si no se traslapan."""
+    """Distancia temporal exacta entre dos intervalos si no se traslapan."""
     if a_fin < b_ini:
         return horas_entre(a_fin, b_ini)
     if b_fin < a_ini:
         return horas_entre(b_fin, a_ini)
     return 0.0
+
+
+def traslape_horas_minuto(a_ini: datetime, a_fin: datetime, b_ini: datetime, b_fin: datetime) -> float:
+    """Traslape ignorando segundos. Se usa para buscar respaldo en AMT."""
+    return traslape_horas(truncar_a_minuto(a_ini), truncar_a_minuto(a_fin), truncar_a_minuto(b_ini), truncar_a_minuto(b_fin))
+
+
+def distancia_minima_horas_minuto(a_ini: datetime, a_fin: datetime, b_ini: datetime, b_fin: datetime) -> float:
+    """Distancia ignorando segundos. Se usa para buscar respaldo en AMT."""
+    return distancia_minima_horas(truncar_a_minuto(a_ini), truncar_a_minuto(a_fin), truncar_a_minuto(b_ini), truncar_a_minuto(b_fin))
+
+
+def asignar_eventos_continuos_collahuasi(df: pd.DataFrame, tolerancia_horas: float) -> pd.DataFrame:
+    """
+    Agrupa los registros de Detenciones Collahuasi en eventos continuos por equipo.
+
+    Regla de negocio:
+    - Una detención puede estar dividida en varios cortes por turno, PM, lavado,
+      backlog, espera de repuesto u otra causa.
+    - Mientras el siguiente corte comience en la misma hora en que terminó el
+      corte anterior, se considera parte de la misma detención.
+    - Cuando aparece un gap mayor a la tolerancia, comienza una nueva detención.
+
+    Esto evita validar cada corte como si fuera una panne independiente y permite
+    comparar contra DailyDowntimeLog usando el inicio y término real de la cadena
+    continua de Collahuasi.
+    """
+    if df.empty:
+        return df.copy()
+
+    datos = df.sort_values(["equipo", "inicio_collahuasi", "termino_collahuasi"]).copy()
+    datos["evento_collahuasi_id"] = ""
+    datos["inicio_evento_collahuasi"] = pd.NaT
+    datos["termino_evento_collahuasi"] = pd.NaT
+    datos["filas_evento_collahuasi"] = ""
+
+    tolerancia = timedelta(hours=tolerancia_horas)
+    bloques = []
+
+    for equipo, grupo in datos.groupby("equipo", sort=False):
+        indices = list(grupo.index)
+        if not indices:
+            continue
+
+        bloque_actual = [indices[0]]
+        termino_actual = datos.loc[indices[0], "termino_collahuasi"]
+
+        for idx in indices[1:]:
+            inicio = datos.loc[idx, "inicio_collahuasi"]
+            termino = datos.loc[idx, "termino_collahuasi"]
+
+            if inicio <= termino_actual + tolerancia:
+                bloque_actual.append(idx)
+                if termino > termino_actual:
+                    termino_actual = termino
+            else:
+                bloques.append((equipo, bloque_actual))
+                bloque_actual = [idx]
+                termino_actual = termino
+
+        bloques.append((equipo, bloque_actual))
+
+    for n, (equipo, idxs) in enumerate(bloques, start=1):
+        inicio_evento = datos.loc[idxs, "inicio_collahuasi"].min()
+        termino_evento = datos.loc[idxs, "termino_collahuasi"].max()
+        filas = ", ".join(str(int(x)) for x in datos.loc[idxs, "fila_collahuasi"].dropna().tolist())
+        evento_id = f"COLL-{n:05d}|{equipo}|{inicio_evento.isoformat()}|{termino_evento.isoformat()}"
+
+        datos.loc[idxs, "evento_collahuasi_id"] = evento_id
+        datos.loc[idxs, "inicio_evento_collahuasi"] = inicio_evento
+        datos.loc[idxs, "termino_evento_collahuasi"] = termino_evento
+        datos.loc[idxs, "filas_evento_collahuasi"] = filas
+
+    return datos.sort_index()
+
+
+def buscar_mejor_evento_amt_por_intervalo(
+    equipo: str,
+    inicio: datetime,
+    termino: datetime,
+    df_eventos: pd.DataFrame,
+    tolerancia_horas: float,
+) -> Tuple[Optional[Dict], float]:
+    """
+    Busca el evento AMT que respalda una cadena continua de Detenciones Collahuasi.
+    Usa mismo equipo y mayor traslape del intervalo completo.
+    """
+    if df_eventos.empty:
+        return None, 0.0
+
+    candidatos = df_eventos[df_eventos["equipo"] == equipo].copy()
+    if candidatos.empty:
+        return None, 0.0
+
+    mejor = None
+    mejor_traslape = 0.0
+    mejor_distancia = 999999.0
+
+    for _, ev in candidatos.iterrows():
+        ini_a = ev["inicio_amt"]
+        fin_a = ev["termino_amt"]
+        overlap = traslape_horas_minuto(inicio, termino, ini_a, fin_a)
+        dist = distancia_minima_horas_minuto(inicio, termino, ini_a, fin_a)
+
+        if overlap > mejor_traslape:
+            mejor = ev.to_dict()
+            mejor_traslape = overlap
+            mejor_distancia = dist
+        elif overlap == mejor_traslape and dist < mejor_distancia:
+            mejor = ev.to_dict()
+            mejor_distancia = dist
+
+    if mejor_traslape <= 0 and diferencia_mayor(mejor_distancia, tolerancia_horas):
+        return None, 0.0
+
+    return mejor, mejor_traslape
 
 
 def buscar_mejor_evento_amt(registro: pd.Series, df_eventos: pd.DataFrame, tolerancia_horas: float) -> Tuple[Optional[Dict], float]:
@@ -675,8 +862,8 @@ def buscar_mejor_evento_amt(registro: pd.Series, df_eventos: pd.DataFrame, toler
     for _, ev in candidatos.iterrows():
         ini_a = ev["inicio_amt"]
         fin_a = ev["termino_amt"]
-        overlap = traslape_horas(ini_c, fin_c, ini_a, fin_a)
-        dist = distancia_minima_horas(ini_c, fin_c, ini_a, fin_a)
+        overlap = traslape_horas_minuto(ini_c, fin_c, ini_a, fin_a)
+        dist = distancia_minima_horas_minuto(ini_c, fin_c, ini_a, fin_a)
 
         if overlap > mejor_traslape:
             mejor = ev.to_dict()
@@ -687,7 +874,7 @@ def buscar_mejor_evento_amt(registro: pd.Series, df_eventos: pd.DataFrame, toler
             mejor_distancia = dist
 
     # Si no existe traslape, solo acepta coincidencia cercana por tolerancia.
-    if mejor_traslape <= 0 and mejor_distancia > tolerancia_horas:
+    if mejor_traslape <= 0 and diferencia_mayor(mejor_distancia, tolerancia_horas):
         return None, 0.0
 
     return mejor, mejor_traslape
@@ -710,7 +897,7 @@ def detectar_continuidad(tramos: pd.DataFrame, tolerancia_horas: float) -> List[
         ini_act = actual["inicio_collahuasi"]
         dif_h = horas_entre(fin_ant, ini_act)
 
-        if dif_h > tolerancia_horas:
+        if diferencia_mayor(dif_h, tolerancia_horas):
             hallazgos.append({
                 "tipo_error": "GAP_ENTRE_CORTES",
                 "desde": fin_ant,
@@ -719,7 +906,7 @@ def detectar_continuidad(tramos: pd.DataFrame, tolerancia_horas: float) -> List[
                 "fila_anterior": anterior["fila_collahuasi"],
                 "fila_actual": actual["fila_collahuasi"],
             })
-        elif dif_h < -tolerancia_horas:
+        elif diferencia_menor(dif_h, -tolerancia_horas):
             hallazgos.append({
                 "tipo_error": "SOLAPAMIENTO_ENTRE_CORTES",
                 "desde": ini_act,
@@ -758,14 +945,33 @@ def comparar_detenciones(
             (registros["inicio_collahuasi"] < rango_termino)
         ].copy()
 
+    # Agrupar Detenciones Collahuasi por continuidad antes de buscar respaldo en AMT.
+    # Esto permite comparar la panne completa y no cada corte por separado.
+    registros = asignar_eventos_continuos_collahuasi(registros, tolerancia_horas)
+
+    eventos_collahuasi_map = {}
+    if not registros.empty:
+        for evento_coll_id, grupo_coll in registros.groupby("evento_collahuasi_id"):
+            equipo_coll = grupo_coll["equipo"].iloc[0]
+            inicio_coll_evento = grupo_coll["inicio_collahuasi"].min()
+            termino_coll_evento = grupo_coll["termino_collahuasi"].max()
+            evento_amt, overlap_evento_h = buscar_mejor_evento_amt_por_intervalo(
+                equipo=equipo_coll,
+                inicio=inicio_coll_evento,
+                termino=termino_coll_evento,
+                df_eventos=df_eventos_amt,
+                tolerancia_horas=tolerancia_horas,
+            )
+            eventos_collahuasi_map[evento_coll_id] = (evento_amt, overlap_evento_h)
+
     resultados = []
 
     for _, reg in registros.iterrows():
-        evento, overlap_h = buscar_mejor_evento_amt(reg, df_eventos_amt, tolerancia_horas)
+        evento, overlap_h = eventos_collahuasi_map.get(reg.get("evento_collahuasi_id", ""), (None, 0.0))
         errores = []
 
         if evento is None:
-            errores.append("REGISTRO_COLLAHUASI_SIN_RESPALDO_AMT")
+            errores.append("DETENCION_PENDIENTE_INGRESO_AMT")
             resultados.append({
                 **reg.to_dict(),
                 "evento_id": "",
@@ -776,7 +982,7 @@ def comparar_detenciones(
                 "termino_amt_referencial": False,
                 "descripcion_amt": "",
                 "traslape_h": 0,
-                "resultado": "ERROR",
+                "resultado": "PENDIENTE_INGRESO_AMT",
                 "errores": "; ".join(errores),
                 "observaciones": "",
                 "detalle": ERROR_DESCRIPCION[errores[0]],
@@ -797,12 +1003,12 @@ def comparar_detenciones(
         if termino_collahuasi_referencial:
             observaciones.append("TERMINO_COLLAHUASI_REFERENCIAL_0800")
 
-        if inicio_amt_referencial and abs(horas_entre(ini_c, ini_a)) > tolerancia_horas:
+        if inicio_amt_referencial and diferencia_abs_mayor(horas_entre_minuto(ini_c, ini_a), tolerancia_horas):
             observaciones.append("INICIO_AMT_REFERENCIAL_RANGO")
-        elif ini_c < ini_a - timedelta(hours=tolerancia_horas):
+        elif diferencia_menor(horas_entre_minuto(ini_a, ini_c), -tolerancia_horas):
             errores.append("TRAMO_INICIA_ANTES_AMT")
 
-        if fin_c > fin_a + timedelta(hours=tolerancia_horas):
+        if diferencia_mayor(horas_entre_minuto(fin_a, fin_c), tolerancia_horas):
             if termino_amt_referencial:
                 observaciones.append("TERMINO_AMT_REFERENCIAL_RANGO")
             elif termino_collahuasi_referencial:
@@ -819,7 +1025,7 @@ def comparar_detenciones(
             not inicio_amt_referencial
             and not termino_amt_referencial
             and not termino_collahuasi_referencial
-            and reg["duracion_collahuasi_h"] > float(evento["duracion_amt_h"]) + tolerancia_horas
+            and diferencia_mayor(horas_entre_minuto(ini_c, fin_c) - float(evento["duracion_amt_h"]), tolerancia_horas)
         ):
             if in_progress_amt:
                 if "IN_PROGRESS_CON_TERMINO_COLLAHUASI" not in errores:
@@ -850,16 +1056,22 @@ def comparar_detenciones(
     if not df_resultado.empty:
         mapeados = df_resultado[df_resultado["evento_id"].astype(str) != ""].copy()
 
-        for evento_id, grupo in mapeados.groupby("evento_id"):
+        agrupador_evento = "evento_collahuasi_id" if "evento_collahuasi_id" in mapeados.columns else "evento_id"
+
+        for evento_coll_id, grupo in mapeados.groupby(agrupador_evento):
+            evento_id = grupo["evento_id"].iloc[0]
             evento = df_eventos_amt[df_eventos_amt["evento_id"] == evento_id].iloc[0]
             grupo_ordenado = grupo.sort_values("inicio_collahuasi")
 
+            # La validación de inicio/término se realiza sobre la cadena continua
+            # de Detenciones Collahuasi, no sobre cada corte individual.
             inicio_c = grupo_ordenado["inicio_collahuasi"].min()
             termino_c = grupo_ordenado["termino_collahuasi"].max()
             duracion_c = grupo_ordenado["duracion_collahuasi_h"].sum()
             inicio_a = evento["inicio_amt"]
             termino_a = evento["termino_amt"]
             duracion_a = float(evento["duracion_amt_h"])
+            duracion_c_comparacion = horas_entre_minuto(inicio_c, termino_c)
 
             errores = []
             detalles_extra = []
@@ -872,12 +1084,12 @@ def comparar_detenciones(
             if validar_cobertura_total:
                 # Si el inicio AMT coincide con el inicio del rango del reporte, ese inicio puede
                 # ser referencial. En ese caso no se marca diferencia de inicio.
-                if not inicio_amt_referencial and inicio_c > inicio_a + timedelta(hours=tolerancia_horas):
+                if not inicio_amt_referencial and diferencia_mayor(horas_entre_minuto(inicio_a, inicio_c), tolerancia_horas):
                     errores.append("INICIO_EVENTO_NO_COINCIDE")
 
                 # Si el término AMT coincide con el término del rango del reporte, ese término puede
                 # ser referencial. En ese caso no se marca diferencia de término.
-                if not termino_amt_referencial and not termino_collahuasi_referencial and termino_c < termino_a - timedelta(hours=tolerancia_horas):
+                if not termino_amt_referencial and not termino_collahuasi_referencial and diferencia_menor(horas_entre_minuto(termino_a, termino_c), -tolerancia_horas):
                     errores.append("TERMINO_EVENTO_NO_COINCIDE")
 
                 # La duración total solo se valida cuando ni el inicio ni el término vienen
@@ -886,7 +1098,7 @@ def comparar_detenciones(
                     not inicio_amt_referencial
                     and not termino_amt_referencial
                     and not termino_collahuasi_referencial
-                    and abs(duracion_c - duracion_a) > tolerancia_horas
+                    and diferencia_abs_mayor(duracion_c_comparacion - duracion_a, tolerancia_horas)
                 ):
                     errores.append("DURACION_EVENTO_NO_COINCIDE")
 
@@ -984,8 +1196,8 @@ def revisar_eventos_in_progress(
 
         candidatos = df_collahuasi[
             (df_collahuasi["equipo"] == equipo)
-            & (df_collahuasi["termino_collahuasi"] > inicio_amt - tolerancia)
-            & (df_collahuasi["inicio_collahuasi"] <= limite_busqueda)
+            & (df_collahuasi["termino_collahuasi"].apply(truncar_a_minuto) > truncar_a_minuto(inicio_amt - tolerancia))
+            & (df_collahuasi["inicio_collahuasi"].apply(truncar_a_minuto) <= truncar_a_minuto(limite_busqueda))
         ].copy()
 
         candidatos = candidatos.sort_values("inicio_collahuasi").reset_index(drop=True)
@@ -1000,7 +1212,7 @@ def revisar_eventos_in_progress(
 
             # Primer tramo: debe traslapar el evento AMT o comenzar cerca del término referencial.
             if not cadena_iniciada:
-                traslapa_evento = fin_c > inicio_amt - tolerancia and ini_c <= termino_ref + max_gap
+                traslapa_evento = truncar_a_minuto(fin_c) > truncar_a_minuto(inicio_amt - tolerancia) and truncar_a_minuto(ini_c) <= truncar_a_minuto(termino_ref + max_gap)
                 if not traslapa_evento:
                     continue
                 cadena.append(tramo)
@@ -1036,7 +1248,7 @@ def revisar_eventos_in_progress(
         df_cadena = pd.DataFrame([t.to_dict() for t in cadena])
         termino_coll = df_cadena["termino_collahuasi"].max()
         duracion_coll = df_cadena["duracion_collahuasi_h"].sum()
-        diferencia = horas_entre(termino_ref, termino_coll)
+        diferencia = horas_entre_minuto(termino_ref, termino_coll)
         filas_str = ", ".join(str(int(x)) for x in df_cadena["fila_collahuasi"].dropna().tolist())
 
         termino_collahuasi_referencial = es_termino_collahuasi_referencial_0800(
@@ -1047,7 +1259,7 @@ def revisar_eventos_in_progress(
             resultado = "OK"
             errores = ""
             detalle = ERROR_DESCRIPCION["TERMINO_COLLAHUASI_REFERENCIAL_0800"]
-        elif abs(horas_entre(termino_ref, termino_coll)) > tolerancia_horas:
+        elif diferencia_abs_mayor(horas_entre_minuto(termino_ref, termino_coll), tolerancia_horas):
             resultado = "OK"
             errores = ""
             detalle = ERROR_DESCRIPCION["TERMINO_AMT_REFERENCIAL_RANGO"]
@@ -1150,7 +1362,9 @@ def generar_pdf(
 
     rango_txt = f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}" if rango_inicio and rango_termino else "No detectado"
     total_coll = len(df_resultado)
-    errores_reg = len(df_resultado[df_resultado["resultado"] == "ERROR"]) if not df_resultado.empty else 0
+    hallazgos_reg = len(df_resultado[df_resultado["resultado"] != "OK"]) if not df_resultado.empty else 0
+    pendientes_amt = len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"]) if not df_resultado.empty else 0
+    otros_hallazgos_reg = len(df_resultado[(df_resultado["resultado"] != "OK") & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")]) if not df_resultado.empty else 0
     ok_reg = len(df_resultado[df_resultado["resultado"] == "OK"]) if not df_resultado.empty else 0
     errores_evento = len(df_eventos_error)
     informativos = len(df_amt_sin_coll)
@@ -1159,12 +1373,11 @@ def generar_pdf(
 
     resumen = [
         ["Rango DailyDowntimeLog", rango_txt],
-        ["Tolerancia aplicada", f"{tolerancia_minutos} minutos"],
         ["Registros Collahuasi revisados", str(total_coll)],
         ["Registros correctos", str(ok_reg)],
-        ["Registros con error", str(errores_reg)],
+        ["Detenciones pendientes de ingreso en AMT", str(pendientes_amt)],
+        ["Diferencia en los tiempos de la detención", str(otros_hallazgos_reg)],
         ["Eventos con diferencias de cortes/continuidad", str(errores_evento)],
-        ["Eventos AMT sin Collahuasi", f"{informativos} (informativo)"],
         ["Eventos AMT In Progress revisados", str(total_in_progress)],
         ["Eventos In Progress con alerta", str(errores_in_progress)],
     ]
@@ -1172,20 +1385,54 @@ def generar_pdf(
     elementos.append(tabla_pdf([["Indicador", "Valor"]] + resumen, col_widths=[7 * cm, 14 * cm], font_size=8))
     elementos.append(Spacer(1, 0.4 * cm))
 
-    # Errores a nivel registro.
-    elementos.append(Paragraph("Errores a nivel registro Collahuasi", styles["Subtitulo"]))
-    if df_resultado.empty or errores_reg == 0:
-        elementos.append(Paragraph("No se detectaron errores a nivel registro.", styles["Texto"]))
+    df_pendientes_amt = df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy() if not df_resultado.empty else pd.DataFrame()
+    df_diferencias_tiempo = df_resultado[
+        (df_resultado["resultado"] != "OK") &
+        (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
+    ].copy() if not df_resultado.empty else pd.DataFrame()
+
+    # Detenciones pendientes de ingreso en AMT.
+    elementos.append(Paragraph("Detenciones pendientes de ingreso en AMT", styles["Subtitulo"]))
+    if df_pendientes_amt.empty:
+        elementos.append(Paragraph("No se detectaron detenciones pendientes de ingreso en AMT.", styles["Texto"]))
+    else:
+        cols = [
+            "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
+            "duracion_collahuasi_h", "errores", "razon_collahuasi", "comentario_collahuasi"
+        ]
+        vista = df_pendientes_amt[cols].head(80)
+        data = [[
+            "Fila", "Equipo", "Inicio Coll.", "Término Coll.",
+            "H Coll.", "Estado", "Razón", "Comentario"
+        ]]
+        for _, r in vista.iterrows():
+            data.append([
+                str(r["fila_collahuasi"]),
+                r["equipo"],
+                fmt_dt(r["inicio_collahuasi"]),
+                fmt_dt(r["termino_collahuasi"]),
+                fmt_horas(r["duracion_collahuasi_h"]),
+                Paragraph(str(r["errores"]), styles["Texto"]),
+                Paragraph(str(r.get("razon_collahuasi", "")), styles["Texto"]),
+                Paragraph(str(r.get("comentario_collahuasi", "")), styles["Texto"]),
+            ])
+        elementos.append(tabla_pdf(data, col_widths=[1.3*cm, 1.5*cm, 2.7*cm, 2.7*cm, 1.4*cm, 4.0*cm, 4.0*cm, 7.0*cm], font_size=6))
+
+    elementos.append(Spacer(1, 0.4 * cm))
+
+    # Diferencia en los tiempos de la detención.
+    elementos.append(Paragraph("Diferencia en los tiempos de la detención", styles["Subtitulo"]))
+    if df_diferencias_tiempo.empty:
+        elementos.append(Paragraph("No se detectaron diferencias en los tiempos de la detención.", styles["Texto"]))
     else:
         cols = [
             "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
             "inicio_amt", "termino_amt", "duracion_collahuasi_h", "duracion_amt_h", "errores"
         ]
-        vista = df_resultado[df_resultado["resultado"] == "ERROR"].copy()
-        vista = vista[cols].head(80)
+        vista = df_diferencias_tiempo[cols].head(80)
         data = [[
             "Fila", "Equipo", "Inicio Coll.", "Término Coll.",
-            "Inicio AMT", "Término AMT", "H Coll.", "H AMT", "Error"
+            "Inicio AMT", "Término AMT", "H Coll.", "H AMT", "Diferencia"
         ]]
         for _, r in vista.iterrows():
             data.append([
@@ -1203,7 +1450,7 @@ def generar_pdf(
 
     # Errores agrupados por evento.
     elementos.append(PageBreak())
-    elementos.append(Paragraph("Errores de cortes / continuidad por evento AMT", styles["Subtitulo"]))
+    elementos.append(Paragraph("Hallazgos de cortes / continuidad por evento AMT", styles["Subtitulo"]))
     if df_eventos_error.empty:
         elementos.append(Paragraph("No se detectaron errores agrupados por evento.", styles["Texto"]))
     else:
@@ -1227,7 +1474,7 @@ def generar_pdf(
 
     # Revision especial In Progress.
     elementos.append(PageBreak())
-    elementos.append(Paragraph("Revisión especial eventos AMT In Progress", styles["Subtitulo"]))
+    elementos.append(Paragraph("Revisión detenciones In Progress", styles["Subtitulo"]))
     if df_in_progress is None or df_in_progress.empty:
         elementos.append(Paragraph("No se detectaron eventos AMT In Progress con los criterios configurados.", styles["Texto"]))
     else:
@@ -1249,26 +1496,6 @@ def generar_pdf(
             ])
         elementos.append(tabla_pdf(data, col_widths=[1.7*cm, 1.5*cm, 2.7*cm, 2.7*cm, 2.9*cm, 1.3*cm, 1.3*cm, 2.3*cm, 8.0*cm], font_size=6))
 
-    # Informativos AMT sin Collahuasi.
-    elementos.append(PageBreak())
-    elementos.append(Paragraph("Eventos AMT no encontrados en Collahuasi - Informativo", styles["Subtitulo"]))
-    if df_amt_sin_coll.empty:
-        elementos.append(Paragraph("No hay eventos AMT sin registros Collahuasi asociados.", styles["Texto"]))
-    else:
-        elementos.append(Paragraph(
-            "Estos registros no se consideran error principal, porque la lógica de control parte desde Detenciones Collahuasi hacia DailyDowntimeLog/AMT.",
-            styles["Texto"]
-        ))
-        data = [["Equipo", "Inicio AMT", "Término AMT", "H AMT", "Descripción"]]
-        for _, r in df_amt_sin_coll.head(80).iterrows():
-            data.append([
-                r["equipo"],
-                fmt_dt(r["inicio_amt"]),
-                fmt_dt(r["termino_amt"]),
-                fmt_horas(r["duracion_amt_h"]),
-                Paragraph(str(r.get("descripcion", "")), styles["Texto"]),
-            ])
-        elementos.append(tabla_pdf(data, col_widths=[1.6*cm, 3*cm, 3*cm, 1.5*cm, 15*cm], font_size=6))
 
     doc.build(elementos, onFirstPage=agregar_pie_pagina, onLaterPages=agregar_pie_pagina)
     buffer.seek(0)
@@ -1287,10 +1514,17 @@ def generar_excel_resultados(
     df_asignaciones_amt: pd.DataFrame,
 ) -> bytes:
     output = io.BytesIO()
+    df_pendientes_amt = df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy() if not df_resultado.empty else pd.DataFrame()
+    df_diferencias_tiempo = df_resultado[
+        (df_resultado["resultado"] != "OK") &
+        (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
+    ].copy() if not df_resultado.empty else pd.DataFrame()
+
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         df_resultado.to_excel(writer, index=False, sheet_name="Revision registros")
-        df_eventos_error.to_excel(writer, index=False, sheet_name="Errores eventos")
-        df_amt_sin_coll.to_excel(writer, index=False, sheet_name="AMT informativo")
+        df_pendientes_amt.to_excel(writer, index=False, sheet_name="Pendientes ingreso AMT")
+        df_diferencias_tiempo.to_excel(writer, index=False, sheet_name="Diferencia tiempos det")
+        df_eventos_error.to_excel(writer, index=False, sheet_name="Hallazgos eventos")
         df_in_progress.to_excel(writer, index=False, sheet_name="In Progress")
         df_eventos_amt.to_excel(writer, index=False, sheet_name="Eventos AMT")
         df_asignaciones_amt.to_excel(writer, index=False, sheet_name="Asignaciones AMT")
@@ -1313,14 +1547,9 @@ def main():
         archivo_collahuasi = st.file_uploader("2. Cargar DETENCIONES COLLAHUASI 2026.xlsx", type=["xlsx"])
 
     st.sidebar.header("Configuración")
-    tolerancia_minutos = st.sidebar.number_input(
-        "Tolerancia en minutos",
-        min_value=0,
-        max_value=60,
-        value=3,
-        step=1,
-        help="Tolerancia permitida para diferencias pequeñas por segundos/redondeos."
-    )
+    # Tolerancia fija: 0 minutos.
+    # Según la lógica solicitada, no debe existir diferencia permitida entre los tiempos.
+    tolerancia_minutos = 0
     filtrar_por_rango_daily = st.sidebar.checkbox(
         "Validar solo registros Collahuasi dentro del rango DailyDowntimeLog",
         value=True,
@@ -1329,34 +1558,15 @@ def main():
         "Validar gaps/solapamientos entre cortes Collahuasi",
         value=True,
     )
-    validar_cobertura_total = st.sidebar.checkbox(
-        "Validar cobertura total del evento AMT",
-        value=False,
-        help="Si se activa, marca error cuando Collahuasi no cubre todo el inicio/término/duración del evento AMT. Por defecto queda desactivado para respetar la lógica inversa solicitada."
-    )
+    # La cobertura total del evento AMT se valida siempre según la lógica solicitada:
+    # AMT debe cubrir el inicio y término de la detención continua indicada en Collahuasi.
+    validar_cobertura_total = True
 
-    st.sidebar.subheader("In Progress")
-    detectar_in_progress_por_0800 = st.sidebar.checkbox(
-        "Tratar cualquier término 08:00 como posible In Progress",
-        value=False,
-        help="Por defecto se considera In Progress cuando el término AMT coincide con el fin del rango descargado del DailyDowntimeLog, aunque sea 00:00, 08:00 u otra hora. Activa esta opción si tus reportes también usan 08:00 como término referencial en cualquier día."
-    )
-    ventana_in_progress_horas = st.sidebar.number_input(
-        "Ventana búsqueda término Collahuasi (horas)",
-        min_value=8,
-        max_value=720,
-        value=168,
-        step=8,
-        help="Cantidad de horas posteriores al término referencial AMT para buscar continuidad en Collahuasi."
-    )
-    max_gap_in_progress_horas = st.sidebar.number_input(
-        "Gap máximo entre cortes In Progress (horas)",
-        min_value=0.0,
-        max_value=24.0,
-        value=2.0,
-        step=0.5,
-        help="Permite unir cortes Collahuasi posteriores al término 08:00 cuando pertenecen a la misma detención."
-    )
+    # Parámetros In Progress fijos según la lógica definida.
+    # No se muestran en la barra lateral para evitar cambios manuales de criterio.
+    detectar_in_progress_por_0800 = False
+    ventana_in_progress_horas = 168
+    max_gap_in_progress_horas = 2.0
 
     if archivo_daily is None or archivo_collahuasi is None:
         st.warning("Carga ambos archivos para iniciar la revisión.")
@@ -1419,7 +1629,9 @@ def main():
 
         rango_txt = f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}" if rango_inicio and rango_termino else "No detectado"
         total = len(df_resultado)
-        errores = len(df_resultado[df_resultado["resultado"] == "ERROR"]) if not df_resultado.empty else 0
+        hallazgos = len(df_resultado[df_resultado["resultado"] != "OK"]) if not df_resultado.empty else 0
+        pendientes_amt = len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"]) if not df_resultado.empty else 0
+        otros_hallazgos = len(df_resultado[(df_resultado["resultado"] != "OK") & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")]) if not df_resultado.empty else 0
         correctos = len(df_resultado[df_resultado["resultado"] == "OK"]) if not df_resultado.empty else 0
 
         total_in_progress = len(df_in_progress) if not df_in_progress.empty else 0
@@ -1429,42 +1641,56 @@ def main():
         c1.metric("Rango Daily", rango_txt)
         c2.metric("Registros revisados", total)
         c3.metric("Correctos", correctos)
-        c4.metric("Con error", errores)
+        c4.metric("Pendientes AMT", pendientes_amt)
         c5.metric("In Progress", f"{total_in_progress} / {errores_in_progress} alerta")
 
-        st.subheader("Errores encontrados")
-        if df_resultado.empty or errores == 0:
-            st.success("No se detectaron errores a nivel registro Collahuasi.")
+        df_pendientes_amt = df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy() if not df_resultado.empty else pd.DataFrame()
+        df_diferencias_tiempo = df_resultado[
+            (df_resultado["resultado"] != "OK") &
+            (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
+        ].copy() if not df_resultado.empty else pd.DataFrame()
+
+        st.subheader("Detenciones pendientes de ingreso en AMT")
+        if df_pendientes_amt.empty:
+            st.success("No se detectaron detenciones pendientes de ingreso en AMT.")
         else:
-            columnas_vista = [
+            columnas_pendientes = [
+                "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
+                "duracion_collahuasi_h", "errores", "razon_collahuasi", "comentario_collahuasi"
+            ]
+            st.dataframe(
+                df_pendientes_amt[columnas_pendientes],
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        st.subheader("Diferencia en los tiempos de la detención")
+        if df_diferencias_tiempo.empty:
+            st.success("No se detectaron diferencias en los tiempos de la detención.")
+        else:
+            columnas_diferencias = [
                 "fila_collahuasi", "equipo", "inicio_collahuasi", "termino_collahuasi",
                 "inicio_amt", "termino_amt", "duracion_collahuasi_h", "duracion_amt_h",
                 "errores", "observaciones", "razon_collahuasi", "comentario_collahuasi", "descripcion_amt"
             ]
             st.dataframe(
-                df_resultado[df_resultado["resultado"] == "ERROR"][columnas_vista],
+                df_diferencias_tiempo[columnas_diferencias],
                 use_container_width=True,
                 hide_index=True,
             )
 
-        st.subheader("Errores de cortes / continuidad por evento")
+        st.subheader("Hallazgos de cortes / continuidad por evento")
         if df_eventos_error.empty:
-            st.info("No se detectaron errores agrupados por evento.")
+            st.info("No se detectaron hallazgos agrupados por evento.")
         else:
             st.dataframe(df_eventos_error, use_container_width=True, hide_index=True)
 
-        st.subheader("Revisión especial In Progress")
+        st.subheader("Revisión detenciones In Progress")
         if df_in_progress.empty:
             st.info("No se detectaron eventos In Progress con la configuración actual.")
         else:
             st.dataframe(df_in_progress, use_container_width=True, hide_index=True)
 
-        st.subheader("Eventos AMT no encontrados en Collahuasi - Informativo")
-        st.caption("Estos registros no se consideran error principal según la lógica solicitada.")
-        if df_amt_sin_coll.empty:
-            st.info("No hay eventos AMT sin registros Collahuasi asociados.")
-        else:
-            st.dataframe(df_amt_sin_coll, use_container_width=True, hide_index=True)
 
         d1, d2 = st.columns(2)
         with d1:
