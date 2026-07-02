@@ -61,11 +61,19 @@ EPS_HORAS = 1e-6
 # ============================================================
 
 def aplicar_fondo_corporativo():
-    """Aplica imagen de fondo corporativa Finning/CAT a la app Streamlit."""
-    ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
+    """
+    Aplica el fondo corporativo Finning/CAT desde la carpeta assets.
+
+    Ruta esperada en GitHub / Streamlit Cloud:
+    assets/fondo_finning_upscayl.png
+    """
+    ruta_fondo = Path(__file__).parent / "assets" / "fondo_finning_upscayl.png"
 
     if not ruta_fondo.exists():
-        # Si no está la imagen, no detenemos la app.
+        st.warning(
+            "No se encontró la imagen de fondo. "
+            "Verifica que exista: assets/fondo_finning_upscayl.png"
+        )
         return
 
     fondo_base64 = base64.b64encode(ruta_fondo.read_bytes()).decode()
@@ -75,7 +83,7 @@ def aplicar_fondo_corporativo():
         <style>
         [data-testid="stAppViewContainer"] {{
             background-image:
-                linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+                linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)),
                 url("data:image/png;base64,{fondo_base64}");
             background-size: cover;
             background-position: center;
@@ -88,34 +96,66 @@ def aplicar_fondo_corporativo():
         }}
 
         [data-testid="stSidebar"] > div:first-child {{
-            background: rgba(17, 24, 39, 0.90);
+            background: rgba(17, 24, 39, 0.94);
             backdrop-filter: blur(3px);
         }}
 
         .block-container {{
-            background: rgba(10, 16, 26, 0.84);
-            border-radius: 18px;
-            padding: 2rem 2.5rem 2.5rem 2.5rem;
-            margin-top: 1.5rem;
+            background: rgba(255, 255, 255, 0.86);
+            border-radius: 22px;
+            border-top: 8px solid #ffcc00;
+            padding: 2.5rem 3rem 3rem 3rem;
+            margin-top: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
         }}
 
         h1, h2, h3, h4, h5, h6, p, label, span, div {{
             text-shadow: none;
         }}
 
+        .block-container h1,
+        .block-container h2,
+        .block-container h3,
+        .block-container h4,
+        .block-container h5,
+        .block-container h6,
+        .block-container p,
+        .block-container label,
+        .block-container span {{
+            color: #111827;
+        }}
+
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span {{
+            color: #ffffff;
+        }}
+
+        div[data-testid="stFileUploader"] {{
+            background-color: rgba(255, 255, 255, 0.68);
+            border: 2px dashed #ffcc00;
+            border-radius: 14px;
+            padding: 12px;
+        }}
+
         div.stButton > button:first-child {{
             border-radius: 10px;
-            border: 1px solid #fbbf24;
-            background: #fbbf24;
+            border: 2px solid #111827;
+            background: #ffcc00;
             color: #111827;
             font-weight: 700;
         }}
 
         div.stDownloadButton > button:first-child {{
             border-radius: 10px;
-            border: 1px solid #fbbf24;
+            border: 2px solid #111827;
+            background: #ffcc00;
+            color: #111827;
+            font-weight: 700;
         }}
         </style>
         """,
@@ -1605,6 +1645,8 @@ def generar_excel_resultados(
 # ============================================================
 
 def main():
+    aplicar_fondo_corporativo()
+
     st.title("🛠️ Revisión de Detenciones Collahuasi vs DailyDowntimeLog / AMT")
 
     st.markdown("Carga ambos archivos Excel y presiona **Comparar detenciones** para generar el informe.")
