@@ -128,13 +128,6 @@ def aplicar_fondo_corporativo():
         margin-right: auto !important;
     }
 
-    div[data-testid="stDataFrame"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    background-color: rgba(255, 255, 255, 0.92) !important;
-    border-radius: 12px !important;
-    }
-
     /* Tarjeta superior negra */
     .header-card {
         background-color: rgba(0, 0, 0, 0.96) !important;
@@ -331,22 +324,17 @@ def aplicar_fondo_corporativo():
         color: #000000 !important;
     }
 
-    /* Alertas */
-    div[data-testid="stAlert"] {
-    border-radius: 12px !important;
-    }
-
-     /* Franja informativa verde */
+    /* Franja informativa verde */
     .franja-info-verde {
-    background-color: rgba(187, 247, 208, 0.70) !important;
-    color: #22c55e !important;
-    border-radius: 10px !important;
-    padding: 18px 20px !important;
-    margin-top: 20px !important;
-    margin-bottom: 20px !important;
-    font-size: 18px !important;
-    font-weight: 500 !important;
-    border: 1px solid rgba(134, 239, 172, 0.65) !important;
+        background-color: rgba(187, 247, 208, 0.70) !important;
+        color: #22c55e !important;
+        border-radius: 10px !important;
+        padding: 18px 20px !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        font-size: 18px !important;
+        font-weight: 500 !important;
+        border: 1px solid rgba(134, 239, 172, 0.65) !important;
     }
 
     .franja-info-verde strong {
@@ -354,13 +342,50 @@ def aplicar_fondo_corporativo():
         font-weight: 700 !important;
     }
 
+    /* Alertas */
+    div[data-testid="stAlert"] {
+        border-radius: 12px !important;
+    }
+
     div[data-testid="stAlert"] p,
     div[data-testid="stAlert"] div {
         color: #111111 !important;
     }
 
+    /* Métricas superiores */
+    div[data-testid="stMetric"] {
+        background-color: rgba(255, 255, 255, 0.90) !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        border-left: 5px solid #FFCD11 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14) !important;
+    }
+
+    div[data-testid="stMetric"] * {
+        color: #000000 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+    }
+
+    div[data-testid="stMetricLabel"],
+    div[data-testid="stMetricLabel"] p,
+    div[data-testid="stMetricLabel"] div {
+        color: #111111 !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+    }
+
+    div[data-testid="stMetricValue"],
+    div[data-testid="stMetricValue"] div {
+        color: #000000 !important;
+        font-weight: 900 !important;
+        font-size: 30px !important;
+    }
+
     /* Tablas */
     div[data-testid="stDataFrame"] {
+        width: 100% !important;
+        max-width: 100% !important;
         background-color: rgba(255, 255, 255, 0.92) !important;
         border-radius: 12px !important;
     }
@@ -378,7 +403,6 @@ def aplicar_fondo_corporativo():
         css.replace("__FONDO_URL__", fondo_url),
         unsafe_allow_html=True
     )
-
 
 def mostrar_encabezado_corporativo():
     st.markdown(
