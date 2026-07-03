@@ -1909,7 +1909,7 @@ def generar_excel_resultados(
 def main():
     aplicar_fondo_corporativo()
 
-    col_menu, col_reporte = st.columns([0.23, 0.77], gap="large")
+    col_menu, col_reporte = st.columns([0.22, 0.78], gap="large")
 
     with col_menu:
         st.markdown(
@@ -1932,19 +1932,19 @@ def main():
                     Carga DailyDowntimeLog y Detenciones Collahuasi.
                 </p>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         archivo_daily = st.file_uploader(
             "DailyDowntimeLog.xlsx",
             type=["xlsx"],
-            key="archivo_daily"
+            key="archivo_daily",
         )
 
         archivo_collahuasi = st.file_uploader(
             "DETENCIONES COLLAHUASI 2026.xlsx",
             type=["xlsx"],
-            key="archivo_collahuasi"
+            key="archivo_collahuasi",
         )
 
         st.markdown(
@@ -1954,10 +1954,10 @@ def main():
                     <p class="step-title">Comparar detenciones</p>
                 </div>
                 <p class="step-desc">
-                    Valida respaldo AMT, tiempos, continuidad e In Progress.
+                    Valida respaldo AMT, diferencias de tiempo, continuidad e In Progress.
                 </p>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         comparar = st.button("▶ Comparar detenciones", type="primary")
@@ -1969,7 +1969,7 @@ def main():
                     <p class="step-title">Descargar reporte</p>
                 </div>
                 <p class="step-desc">
-                    Los botones de descarga aparecerán después de procesar.
+                    Las descargas aparecerán después de procesar.
                 </p>
 
                 <div class="menu-footer">
@@ -1977,20 +1977,28 @@ def main():
                 </div>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
     with col_reporte:
         st.markdown(
             """
-            <div class="report-panel">
-                <div class="report-title">Reporte ejecutivo de validación</div>
-                <div class="report-subtitle">
-                    Resumen de revisión entre Detenciones Collahuasi y DailyDowntimeLog / AMT.
-                </div>
+            <div class="report-title">Reporte ejecutivo de validación</div>
+            <div class="report-subtitle">
+                Resumen de revisión entre Detenciones Collahuasi y DailyDowntimeLog / AMT.
+            </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
+
+        # Parámetros fijos
+        tolerancia_minutos = 0
+        filtrar_por_rango_daily = True
+        validar_continuidad = True
+        validar_cobertura_total = True
+        detectar_in_progress_por_0800 = False
+        ventana_in_progress_horas = 12
+        max_gap_in_progress_horas = 0
 
         if archivo_daily is None or archivo_collahuasi is None:
             st.markdown(
@@ -1999,9 +2007,8 @@ def main():
                     Carga ambos archivos desde el menú lateral para iniciar la revisión.
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
-            st.markdown("</div>", unsafe_allow_html=True)
             return
 
         st.markdown(
@@ -2010,10 +2017,12 @@ def main():
                 Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
-    if st.button("Comparar detenciones", type="primary"):
+        if not comparar:
+            return
+
         with st.spinner("Leyendo archivos y comparando registros..."):
             try:
                 df_eventos_amt, df_asignaciones_amt, rango_inicio, rango_termino = leer_daily_downtime_log(
@@ -2086,7 +2095,6 @@ def main():
             if not df_resultado.empty
             else 0
         )
-
         total_in_progress = len(df_in_progress) if not df_in_progress.empty else 0
         errores_in_progress = (
             len(df_in_progress[df_in_progress["resultado"] == "ERROR"])
@@ -2095,6 +2103,7 @@ def main():
         )
 
         c1, c2, c3, c4, c5 = st.columns(5)
+
         c1.metric("Rango Daily", rango_txt)
         c2.metric("Registros revisados", total)
         c3.metric("Correctos", correctos)
@@ -2131,7 +2140,9 @@ def main():
                 "razon_collahuasi",
                 "comentario_collahuasi",
             ]
-            columnas_pendientes = [c for c in columnas_pendientes if c in df_pendientes_amt.columns]
+            columnas_pendientes = [
+                c for c in columnas_pendientes if c in df_pendientes_amt.columns
+            ]
 
             st.dataframe(
                 df_pendientes_amt[columnas_pendientes],
@@ -2159,7 +2170,9 @@ def main():
                 "comentario_collahuasi",
                 "descripcion_amt",
             ]
-            columnas_diferencias = [c for c in columnas_diferencias if c in df_diferencias_tiempo.columns]
+            columnas_diferencias = [
+                c for c in columnas_diferencias if c in df_diferencias_tiempo.columns
+            ]
 
             st.dataframe(
                 df_diferencias_tiempo[columnas_diferencias],
