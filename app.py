@@ -311,62 +311,33 @@ def aplicar_fondo_corporativo():
     }
 
     /* =====================================================
-   AJUSTE CUANDO EL SIDEBAR ESTÁ ABIERTO
-   Evita que la franja negra tape el reporte.
-   ===================================================== */
-
-    section[data-testid="stSidebar"] {
-        width: 360px !important;
-        min-width: 360px !important;
-        max-width: 360px !important;
-    }
-
-    section[data-testid="stSidebar"] > div:first-child {
-        width: 360px !important;
-        min-width: 360px !important;
-        max-width: 360px !important;
-    }
-
-    /* Desplaza el contenedor principal hacia la derecha cuando el sidebar está visible */
-    body:has(section[data-testid="stSidebar"][aria-expanded="true"]) [data-testid="stAppViewContainer"] {
-        margin-left: 360px !important;
-        width: calc(100vw - 360px) !important;
-    }
-
-    /* Ajusta el ancho interno del reporte cuando el sidebar está visible */
-    body:has(section[data-testid="stSidebar"][aria-expanded="true"]) .block-container {
-        width: min(1380px, calc(100vw - 410px)) !important;
-        max-width: calc(100vw - 410px) !important;
-        margin-left: 24px !important;
-        margin-right: 24px !important;
-    }
-
-    /* Cuando el sidebar está colapsado, el reporte vuelve a ocupar casi todo el ancho */
-    body:not(:has(section[data-testid="stSidebar"][aria-expanded="true"])) .block-container {
-        width: min(1600px, calc(100vw - 60px)) !important;
-        max-width: calc(100vw - 60px) !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }
-
-    /* =====================================================
-   PANEL PRINCIPAL DERECHO
-   Se ajusta para no quedar debajo del menú lateral.
-   ===================================================== */
+       PANEL PRINCIPAL DERECHO
+       ===================================================== */
 
     .block-container {
-        width: min(1380px, calc(100vw - 410px)) !important;
-        max-width: calc(100vw - 410px) !important;
+        width: auto !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
         background: rgba(255, 255, 255, 0.93) !important;
         border-radius: 22px !important;
         border-left: 6px solid #FFCD11 !important;
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25) !important;
         padding: 2rem 2.5rem !important;
-        margin-top: 1rem !important;
-        margin-bottom: 1rem !important;
-        margin-left: 24px !important;
-        margin-right: 24px !important;
+        margin: 1rem 1.2rem 1rem 1.2rem !important;
         overflow-x: auto !important;
+    }
+
+    /* No desplazar manualmente el reporte: el sidebar nativo de Streamlit
+       ya reserva su espacio. Esto evita que el contenido quede cortado
+       o debajo de la franja lateral. */
+    [data-testid="stMain"] {
+        margin-left: 0 !important;
+        width: auto !important;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        margin-left: 0 !important;
+        width: auto !important;
     }
 
     .report-title {
@@ -435,6 +406,22 @@ def aplicar_fondo_corporativo():
         max-width: 100% !important;
         background-color: rgba(255, 255, 255, 0.98) !important;
         border-radius: 12px !important;
+    }
+
+
+    /* Ajuste de tablas y métricas dentro del panel derecho */
+    div[data-testid="stHorizontalBlock"] {
+        max-width: 100% !important;
+    }
+
+    .report-title {
+        overflow-wrap: anywhere !important;
+    }
+
+    div[data-testid="stMetricValue"] {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
     h1, h2, h3, h4, p, label, span {
