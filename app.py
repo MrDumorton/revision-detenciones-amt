@@ -4,7 +4,6 @@ import zipfile
 import unicodedata
 import base64
 from pathlib import Path
-from textwrap import dedent
 from dataclasses import dataclass
 from datetime import datetime, date, time, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -33,7 +32,7 @@ st.set_page_config(
     page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 MESES = {
@@ -62,18 +61,11 @@ EPS_HORAS = 1e-6
 # ESTILO VISUAL / FONDO CORPORATIVO
 # ============================================================
 
-def render_html(bloque: str):
-    """Renderiza HTML evitando que Streamlit lo muestre como bloque de código."""
-    st.markdown(
-        dedent(bloque).strip(),
-        unsafe_allow_html=True,
-    )
-
-
 def aplicar_fondo_corporativo():
     """
-    Aplica fondo corporativo y visual tipo dashboard:
-    menú lateral izquierdo completo + reporte a la derecha.
+    Aplica fondo corporativo y una franja lateral negra completa usando el
+    sidebar nativo de Streamlit. Así los file_uploader, botones y descargas
+    quedan dentro del menú izquierdo.
     """
 
     ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
@@ -98,10 +90,10 @@ def aplicar_fondo_corporativo():
         background-image:
             linear-gradient(
                 180deg,
-                rgba(11, 13, 18, 0.62) 0px,
-                rgba(11, 13, 18, 0.34) 180px,
-                rgba(255, 255, 255, 0.04) 360px,
-                rgba(255, 255, 255, 0.04) 100%
+                rgba(11, 13, 18, 0.55) 0px,
+                rgba(11, 13, 18, 0.25) 180px,
+                rgba(255, 255, 255, 0.06) 360px,
+                rgba(255, 255, 255, 0.06) 100%
             ),
             url("__FONDO_URL__") !important;
         background-size: cover !important;
@@ -121,45 +113,41 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
-    .block-container {
-        width: min(1720px, calc(100vw - 24px)) !important;
-        max-width: 1720px !important;
-        padding: 0.9rem 1rem !important;
-        margin-top: 0.2rem !important;
-        margin-bottom: 0.8rem !important;
+    /* =====================================================
+       SIDEBAR NEGRO COMPLETO
+       ===================================================== */
+
+    section[data-testid="stSidebar"] {
+        background: rgba(0, 0, 0, 0.96) !important;
+        border-right: 1px solid rgba(255, 205, 17, 0.40) !important;
+        box-shadow: 8px 0 28px rgba(0, 0, 0, 0.35) !important;
     }
 
-    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] > div:first-child {
+        background: rgba(0, 0, 0, 0.96) !important;
+        padding: 1.1rem 1rem 1.5rem 1rem !important;
+    }
+
+    section[data-testid="stSidebar"] * {
+        color: #ffffff !important;
+    }
+
     [data-testid="collapsedControl"] {
-        display: none !important;
+        background: rgba(0, 0, 0, 0.90) !important;
+        border-radius: 10px !important;
+        padding: 6px !important;
     }
 
-    /* ===== FRANJA NEGRA IZQUIERDA COMPLETA ===== */
-    div[data-testid="column"]:has(.menu-panel-marker) {
-        background: rgba(0, 0, 0, 0.92) !important;
-        border-radius: 0 22px 22px 0 !important;
-        border-right: 1px solid rgba(255, 205, 17, 0.45) !important;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.38) !important;
-        padding: 18px 18px 24px 18px !important;
-        min-height: calc(100vh - 28px) !important;
-    }
-
-    div[data-testid="column"]:has(.menu-panel-marker) > div {
-        background: transparent !important;
-    }
-
-    .menu-panel-marker {
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    [data-testid="collapsedControl"] svg {
+        fill: #FFCD11 !important;
     }
 
     .logo-box {
         background: #ffffff !important;
         border-radius: 4px !important;
         padding: 8px !important;
-        margin-bottom: 18px !important;
-        border: 1px solid rgba(255, 205, 17, 0.70) !important;
+        margin-bottom: 20px !important;
+        border: 1px solid rgba(255, 205, 17, 0.80) !important;
     }
 
     .logo-box img {
@@ -169,19 +157,19 @@ def aplicar_fondo_corporativo():
 
     .menu-title {
         color: #ffffff !important;
-        font-size: 23px !important;
+        font-size: 24px !important;
         font-weight: 900 !important;
-        line-height: 1.2 !important;
+        line-height: 1.22 !important;
         text-transform: uppercase !important;
-        margin-top: 8px !important;
-        margin-bottom: 8px !important;
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
     }
 
     .menu-line {
-        width: 78px !important;
+        width: 80px !important;
         height: 4px !important;
         background: #FFCD11 !important;
-        margin: 10px 0 20px 0 !important;
+        margin: 12px 0 24px 0 !important;
         border-radius: 4px !important;
     }
 
@@ -189,7 +177,7 @@ def aplicar_fondo_corporativo():
         display: flex !important;
         align-items: center !important;
         gap: 10px !important;
-        margin-top: 20px !important;
+        margin-top: 24px !important;
         margin-bottom: 6px !important;
     }
 
@@ -209,7 +197,7 @@ def aplicar_fondo_corporativo():
 
     .step-title {
         color: #ffffff !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
         font-weight: 800 !important;
         margin: 0 !important;
     }
@@ -217,47 +205,35 @@ def aplicar_fondo_corporativo():
     .step-desc {
         color: #cbd5e1 !important;
         font-size: 12px !important;
-        margin: 2px 0 12px 40px !important;
-        line-height: 1.4 !important;
+        margin: 4px 0 14px 40px !important;
+        line-height: 1.45 !important;
     }
 
     .menu-footer {
         color: #cbd5e1 !important;
         font-size: 12px !important;
-        margin-top: 22px !important;
+        margin-top: 24px !important;
         border-top: 1px solid rgba(255, 205, 17, 0.35) !important;
         padding-top: 16px !important;
         line-height: 1.4 !important;
     }
 
-    /* Texto dentro de la franja izquierda */
-    div[data-testid="column"]:has(.menu-panel-marker) h1,
-    div[data-testid="column"]:has(.menu-panel-marker) h2,
-    div[data-testid="column"]:has(.menu-panel-marker) h3,
-    div[data-testid="column"]:has(.menu-panel-marker) h4,
-    div[data-testid="column"]:has(.menu-panel-marker) p,
-    div[data-testid="column"]:has(.menu-panel-marker) label,
-    div[data-testid="column"]:has(.menu-panel-marker) span,
-    div[data-testid="column"]:has(.menu-panel-marker) small {
-        color: #ffffff !important;
-    }
-
-    /* Upload dentro de la franja izquierda */
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] {
-        background-color: rgba(255, 255, 255, 0.04) !important;
+    /* Upload dentro del sidebar */
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] {
+        background-color: rgba(255, 255, 255, 0.06) !important;
         border: 1.5px dashed #FFCD11 !important;
         border-radius: 10px !important;
         padding: 18px !important;
-        margin-bottom: 12px !important;
+        margin-bottom: 14px !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] p,
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] span,
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] small {
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] p,
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] span,
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] small {
         color: #ffffff !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] button {
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] button {
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 2px solid #000000 !important;
@@ -265,14 +241,14 @@ def aplicar_fondo_corporativo():
         font-weight: 900 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] button:hover {
+    section[data-testid="stSidebar"] section[data-testid="stFileUploaderDropzone"] button:hover {
         background-color: #000000 !important;
         color: #FFCD11 !important;
         border: 2px solid #FFCD11 !important;
     }
 
-    /* Botones del menú */
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button {
+    /* Botones sidebar */
+    section[data-testid="stSidebar"] .stButton > button {
         width: 100% !important;
         background-color: #FFCD11 !important;
         color: #000000 !important;
@@ -283,27 +259,27 @@ def aplicar_fondo_corporativo():
         text-transform: uppercase !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button p,
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button span,
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button div {
+    section[data-testid="stSidebar"] .stButton > button p,
+    section[data-testid="stSidebar"] .stButton > button span,
+    section[data-testid="stSidebar"] .stButton > button div {
         color: #000000 !important;
-        font-weight: 900 !important;
         opacity: 1 !important;
+        font-weight: 900 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover {
+    section[data-testid="stSidebar"] .stButton > button:hover {
         background-color: #000000 !important;
         color: #FFCD11 !important;
         border: 2px solid #FFCD11 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover p,
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover span,
-    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover div {
+    section[data-testid="stSidebar"] .stButton > button:hover p,
+    section[data-testid="stSidebar"] .stButton > button:hover span,
+    section[data-testid="stSidebar"] .stButton > button:hover div {
         color: #FFCD11 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button {
+    section[data-testid="stSidebar"] .stDownloadButton > button {
         width: 100% !important;
         background-color: rgba(255, 255, 255, 0.08) !important;
         color: #ffffff !important;
@@ -314,48 +290,45 @@ def aplicar_fondo_corporativo():
         margin-top: 8px !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button p,
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button span,
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button div {
+    section[data-testid="stSidebar"] .stDownloadButton > button p,
+    section[data-testid="stSidebar"] .stDownloadButton > button span,
+    section[data-testid="stSidebar"] .stDownloadButton > button div {
         color: #ffffff !important;
-        font-weight: 800 !important;
         opacity: 1 !important;
+        font-weight: 800 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover {
+    section[data-testid="stSidebar"] .stDownloadButton > button:hover {
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 1px solid #000000 !important;
     }
 
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover p,
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover span,
-    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover div {
+    section[data-testid="stSidebar"] .stDownloadButton > button:hover p,
+    section[data-testid="stSidebar"] .stDownloadButton > button:hover span,
+    section[data-testid="stSidebar"] .stDownloadButton > button:hover div {
         color: #000000 !important;
     }
 
-    /* ===== PANEL DERECHO ===== */
-    div[data-testid="column"]:has(.report-panel-marker) {
-        background: rgba(255, 255, 255, 0.94) !important;
-        border-radius: 0 !important;
-        padding: 26px 34px !important;
-        min-height: calc(100vh - 28px) !important;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.20) !important;
-    }
+    /* =====================================================
+       PANEL PRINCIPAL DERECHO
+       ===================================================== */
 
-    div[data-testid="column"]:has(.report-panel-marker) > div {
-        background: transparent !important;
-    }
-
-    .report-panel-marker {
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    .block-container {
+        width: min(1500px, calc(100vw - 40px)) !important;
+        max-width: 1500px !important;
+        background: rgba(255, 255, 255, 0.93) !important;
+        border-radius: 22px !important;
+        border-left: 6px solid #FFCD11 !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25) !important;
+        padding: 2rem 2.5rem !important;
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
     }
 
     .report-title {
         color: #111111 !important;
-        font-size: 34px !important;
+        font-size: 36px !important;
         font-weight: 900 !important;
         text-transform: uppercase !important;
         margin-bottom: 6px !important;
@@ -369,7 +342,7 @@ def aplicar_fondo_corporativo():
     }
 
     .franja-info-verde {
-        background-color: rgba(187, 247, 208, 0.82) !important;
+        background-color: rgba(187, 247, 208, 0.85) !important;
         color: #16a34a !important;
         border-radius: 10px !important;
         padding: 16px 18px !important;
@@ -421,6 +394,10 @@ def aplicar_fondo_corporativo():
         border-radius: 12px !important;
     }
 
+    h1, h2, h3, h4, p, label, span {
+        color: #111111 !important;
+    }
+
     details {
         background: rgba(255, 255, 255, 0.95) !important;
         border-radius: 12px !important;
@@ -434,6 +411,21 @@ def aplicar_fondo_corporativo():
         unsafe_allow_html=True,
     )
 
+
+def mostrar_encabezado_corporativo():
+    st.markdown(
+        """
+        <div class="header-card">
+            <div class="header-title">
+                Revisión de Detenciones AMT
+            </div>
+            <p class="header-subtitle">
+                Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 def truncar_a_minuto(valor):
     """Devuelve datetime sin segundos ni microsegundos para comparaciones contra AMT."""
@@ -1919,7 +1911,7 @@ def generar_excel_resultados(
 def main():
     aplicar_fondo_corporativo()
 
-    # Parámetros fijos de la lógica de validación
+    # Parámetros fijos de la lógica solicitada.
     tolerancia_minutos = 0
     filtrar_por_rango_daily = True
     validar_continuidad = True
@@ -1934,12 +1926,12 @@ def main():
     if "archivos_revision" not in st.session_state:
         st.session_state["archivos_revision"] = None
 
-    col_menu, col_reporte = st.columns([0.24, 0.76], gap="large")
+    # ========================================================
+    # MENÚ LATERAL IZQUIERDO
+    # ========================================================
 
-    with col_menu:
-        render_html("""
-        <div class="menu-panel-marker"></div>
-
+    st.sidebar.markdown(
+        """
         <div class="logo-box">
             <img src="app/static/logo_finning_cat.png">
         </div>
@@ -1958,21 +1950,24 @@ def main():
         <p class="step-desc">
             Carga DailyDowntimeLog y Detenciones Collahuasi.
         </p>
-        """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        archivo_daily = st.file_uploader(
-            "DailyDowntimeLog.xlsx",
-            type=["xlsx"],
-            key="archivo_daily",
-        )
+    archivo_daily = st.sidebar.file_uploader(
+        "DailyDowntimeLog.xlsx",
+        type=["xlsx"],
+        key="archivo_daily",
+    )
 
-        archivo_collahuasi = st.file_uploader(
-            "DETENCIONES COLLAHUASI 2026.xlsx",
-            type=["xlsx"],
-            key="archivo_collahuasi",
-        )
+    archivo_collahuasi = st.sidebar.file_uploader(
+        "DETENCIONES COLLAHUASI 2026.xlsx",
+        type=["xlsx"],
+        key="archivo_collahuasi",
+    )
 
-        render_html("""
+    st.sidebar.markdown(
+        """
         <div class="step-row">
             <div class="step-number">2</div>
             <p class="step-title">Comparar detenciones</p>
@@ -1981,87 +1976,91 @@ def main():
         <p class="step-desc">
             Valida respaldo AMT, diferencias de tiempo, continuidad e In Progress.
         </p>
-        """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        comparar = st.button("▶ Comparar detenciones", type="primary")
+    comparar = st.sidebar.button("▶ Comparar detenciones", type="primary")
 
-        archivo_actual = (
-            archivo_daily.name if archivo_daily is not None else None,
-            archivo_collahuasi.name if archivo_collahuasi is not None else None,
-        )
+    archivo_actual = (
+        archivo_daily.name if archivo_daily is not None else None,
+        archivo_collahuasi.name if archivo_collahuasi is not None else None,
+    )
 
-        if archivo_actual != st.session_state.get("archivos_revision"):
-            st.session_state["resultado_revision"] = None
-            st.session_state["archivos_revision"] = archivo_actual
+    if archivo_actual != st.session_state.get("archivos_revision"):
+        st.session_state["resultado_revision"] = None
+        st.session_state["archivos_revision"] = archivo_actual
 
-        if comparar:
-            if archivo_daily is None or archivo_collahuasi is None:
-                st.warning("Primero debes cargar ambos archivos.")
-            else:
-                with st.spinner("Procesando revisión..."):
-                    try:
-                        df_eventos_amt, df_asignaciones_amt, rango_inicio, rango_termino = leer_daily_downtime_log(
-                            archivo_daily,
-                            detectar_in_progress_por_0800=detectar_in_progress_por_0800,
-                        )
+    if comparar:
+        if archivo_daily is None or archivo_collahuasi is None:
+            st.sidebar.warning("Primero debes cargar ambos archivos.")
+        else:
+            with st.spinner("Procesando revisión..."):
+                try:
+                    df_eventos_amt, df_asignaciones_amt, rango_inicio, rango_termino = leer_daily_downtime_log(
+                        archivo_daily,
+                        detectar_in_progress_por_0800=detectar_in_progress_por_0800,
+                    )
 
-                        df_collahuasi = leer_detenciones_collahuasi(archivo_collahuasi)
+                    df_collahuasi = leer_detenciones_collahuasi(archivo_collahuasi)
 
-                        df_resultado, df_eventos_error, df_amt_sin_coll = comparar_detenciones(
-                            df_collahuasi=df_collahuasi,
-                            df_eventos_amt=df_eventos_amt,
-                            rango_inicio=rango_inicio,
-                            rango_termino=rango_termino,
-                            tolerancia_minutos=int(tolerancia_minutos),
-                            filtrar_por_rango_daily=filtrar_por_rango_daily,
-                            validar_cobertura_total=validar_cobertura_total,
-                            validar_continuidad=validar_continuidad,
-                        )
+                    df_resultado, df_eventos_error, df_amt_sin_coll = comparar_detenciones(
+                        df_collahuasi=df_collahuasi,
+                        df_eventos_amt=df_eventos_amt,
+                        rango_inicio=rango_inicio,
+                        rango_termino=rango_termino,
+                        tolerancia_minutos=int(tolerancia_minutos),
+                        filtrar_por_rango_daily=filtrar_por_rango_daily,
+                        validar_cobertura_total=validar_cobertura_total,
+                        validar_continuidad=validar_continuidad,
+                    )
 
-                        df_in_progress = revisar_eventos_in_progress(
-                            df_eventos_amt=df_eventos_amt,
-                            df_collahuasi=df_collahuasi,
-                            rango_termino=rango_termino,
-                            tolerancia_minutos=int(tolerancia_minutos),
-                            ventana_busqueda_horas=int(ventana_in_progress_horas),
-                            max_gap_horas=float(max_gap_in_progress_horas),
-                        )
+                    df_in_progress = revisar_eventos_in_progress(
+                        df_eventos_amt=df_eventos_amt,
+                        df_collahuasi=df_collahuasi,
+                        rango_termino=rango_termino,
+                        tolerancia_minutos=int(tolerancia_minutos),
+                        ventana_busqueda_horas=int(ventana_in_progress_horas),
+                        max_gap_horas=float(max_gap_in_progress_horas),
+                    )
 
-                        pdf_bytes = generar_pdf(
-                            df_resultado=df_resultado,
-                            df_eventos_error=df_eventos_error,
-                            df_amt_sin_coll=df_amt_sin_coll,
-                            df_in_progress=df_in_progress,
-                            rango_inicio=rango_inicio,
-                            rango_termino=rango_termino,
-                            tolerancia_minutos=int(tolerancia_minutos),
-                        )
+                    pdf_bytes = generar_pdf(
+                        df_resultado=df_resultado,
+                        df_eventos_error=df_eventos_error,
+                        df_amt_sin_coll=df_amt_sin_coll,
+                        df_in_progress=df_in_progress,
+                        rango_inicio=rango_inicio,
+                        rango_termino=rango_termino,
+                        tolerancia_minutos=int(tolerancia_minutos),
+                    )
 
-                        excel_bytes = generar_excel_resultados(
-                            df_resultado=df_resultado,
-                            df_eventos_error=df_eventos_error,
-                            df_amt_sin_coll=df_amt_sin_coll,
-                            df_in_progress=df_in_progress,
-                            df_eventos_amt=df_eventos_amt,
-                            df_asignaciones_amt=df_asignaciones_amt,
-                        )
+                    excel_bytes = generar_excel_resultados(
+                        df_resultado=df_resultado,
+                        df_eventos_error=df_eventos_error,
+                        df_amt_sin_coll=df_amt_sin_coll,
+                        df_in_progress=df_in_progress,
+                        df_eventos_amt=df_eventos_amt,
+                        df_asignaciones_amt=df_asignaciones_amt,
+                    )
 
-                        st.session_state["resultado_revision"] = {
-                            "df_resultado": df_resultado,
-                            "df_eventos_error": df_eventos_error,
-                            "df_amt_sin_coll": df_amt_sin_coll,
-                            "df_in_progress": df_in_progress,
-                            "rango_inicio": rango_inicio,
-                            "rango_termino": rango_termino,
-                            "pdf_bytes": pdf_bytes,
-                            "excel_bytes": excel_bytes,
-                        }
+                    st.session_state["resultado_revision"] = {
+                        "df_resultado": df_resultado,
+                        "df_eventos_error": df_eventos_error,
+                        "df_amt_sin_coll": df_amt_sin_coll,
+                        "df_in_progress": df_in_progress,
+                        "rango_inicio": rango_inicio,
+                        "rango_termino": rango_termino,
+                        "pdf_bytes": pdf_bytes,
+                        "excel_bytes": excel_bytes,
+                    }
 
-                    except Exception as e:
-                        st.error(f"No fue posible procesar los archivos: {e}")
-                        st.exception(e)
+                except Exception as e:
+                    st.sidebar.error("No fue posible procesar los archivos.")
+                    st.error(f"No fue posible procesar los archivos: {e}")
+                    st.exception(e)
 
-        render_html("""
+    st.sidebar.markdown(
+        """
         <div class="step-row">
             <div class="step-number">3</div>
             <p class="step-title">Descargar reporte</p>
@@ -2070,35 +2069,42 @@ def main():
         <p class="step-desc">
             Las descargas aparecerán después de procesar.
         </p>
-        """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        resultado_guardado = st.session_state.get("resultado_revision")
+    resultado_guardado = st.session_state.get("resultado_revision")
 
-        if resultado_guardado is not None:
-            st.download_button(
-                "📄 Descargar PDF",
-                data=resultado_guardado["pdf_bytes"],
-                file_name="informe_revision_detenciones.pdf",
-                mime="application/pdf",
-            )
+    if resultado_guardado is not None:
+        st.sidebar.download_button(
+            "📄 Descargar PDF",
+            data=resultado_guardado["pdf_bytes"],
+            file_name="informe_revision_detenciones.pdf",
+            mime="application/pdf",
+        )
 
-            st.download_button(
-                "📊 Descargar Excel",
-                data=resultado_guardado["excel_bytes"],
-                file_name="detalle_revision_detenciones.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
+        st.sidebar.download_button(
+            "📊 Descargar Excel",
+            data=resultado_guardado["excel_bytes"],
+            file_name="detalle_revision_detenciones.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
-        render_html("""
+    st.sidebar.markdown(
+        """
         <div class="menu-footer">
             La revisión valida que las detenciones de Collahuasi tengan respaldo en AMT.
         </div>
-        """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-    with col_reporte:
-        render_html("""
-        <div class="report-panel-marker"></div>
+    # ========================================================
+    # REPORTE PRINCIPAL DERECHO
+    # ========================================================
 
+    st.markdown(
+        """
         <div class="report-title">
             Reporte ejecutivo de validación
         </div>
@@ -2106,170 +2112,176 @@ def main():
         <div class="report-subtitle">
             Resumen de revisión entre Detenciones Collahuasi y DailyDowntimeLog / AMT.
         </div>
-        """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        if archivo_daily is None or archivo_collahuasi is None:
-            render_html("""
+    if archivo_daily is None or archivo_collahuasi is None:
+        st.markdown(
+            """
             <div class="franja-info-verde">
                 Carga ambos archivos desde el menú lateral para iniciar la revisión.
             </div>
-            """)
-            return
+            """,
+            unsafe_allow_html=True,
+        )
+        return
 
-        resultado_guardado = st.session_state.get("resultado_revision")
-
-        if resultado_guardado is None:
-            render_html("""
+    if resultado_guardado is None:
+        st.markdown(
+            """
             <div class="franja-info-verde">
                 Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> en el menú lateral para generar el informe.
             </div>
-            """)
-            return
+            """,
+            unsafe_allow_html=True,
+        )
+        return
 
-        df_resultado = resultado_guardado["df_resultado"]
-        df_eventos_error = resultado_guardado["df_eventos_error"]
-        df_in_progress = resultado_guardado["df_in_progress"]
-        rango_inicio = resultado_guardado["rango_inicio"]
-        rango_termino = resultado_guardado["rango_termino"]
+    df_resultado = resultado_guardado["df_resultado"]
+    df_eventos_error = resultado_guardado["df_eventos_error"]
+    df_in_progress = resultado_guardado["df_in_progress"]
+    rango_inicio = resultado_guardado["rango_inicio"]
+    rango_termino = resultado_guardado["rango_termino"]
 
-        st.success("Revisión finalizada.")
+    st.success("Revisión finalizada.")
 
-        rango_txt = (
-            f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}"
-            if rango_inicio and rango_termino
-            else "No detectado"
+    rango_txt = (
+        f"{fmt_dt(rango_inicio)} a {fmt_dt(rango_termino)}"
+        if rango_inicio and rango_termino
+        else "No detectado"
+    )
+
+    total = len(df_resultado)
+
+    pendientes_amt = (
+        len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"])
+        if not df_resultado.empty
+        else 0
+    )
+
+    correctos = (
+        len(df_resultado[df_resultado["resultado"] == "OK"])
+        if not df_resultado.empty
+        else 0
+    )
+
+    total_in_progress = len(df_in_progress) if not df_in_progress.empty else 0
+
+    errores_in_progress = (
+        len(df_in_progress[df_in_progress["resultado"] == "ERROR"])
+        if total_in_progress
+        else 0
+    )
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    c1.metric("Rango Daily", rango_txt)
+    c2.metric("Registros revisados", total)
+    c3.metric("Correctos", correctos)
+    c4.metric("Pendientes AMT", pendientes_amt)
+    c5.metric("In Progress", f"{total_in_progress} / {errores_in_progress} alerta")
+
+    df_pendientes_amt = (
+        df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy()
+        if not df_resultado.empty
+        else pd.DataFrame()
+    )
+
+    df_diferencias_tiempo = (
+        df_resultado[
+            (df_resultado["resultado"] != "OK")
+            & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
+        ].copy()
+        if not df_resultado.empty
+        else pd.DataFrame()
+    )
+
+    st.subheader("Detenciones pendientes de ingreso en AMT")
+
+    if df_pendientes_amt.empty:
+        st.success("No se detectaron detenciones pendientes de ingreso en AMT.")
+    else:
+        columnas_pendientes = [
+            "fila_collahuasi",
+            "equipo",
+            "inicio_collahuasi",
+            "termino_collahuasi",
+            "duracion_collahuasi_h",
+            "errores",
+            "razon_collahuasi",
+            "comentario_collahuasi",
+        ]
+
+        columnas_pendientes = [
+            c for c in columnas_pendientes if c in df_pendientes_amt.columns
+        ]
+
+        st.dataframe(
+            df_pendientes_amt[columnas_pendientes],
+            use_container_width=True,
+            hide_index=True,
         )
 
-        total = len(df_resultado)
+    st.subheader("Diferencia en los tiempos de la detención")
 
-        pendientes_amt = (
-            len(df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"])
-            if not df_resultado.empty
-            else 0
+    if df_diferencias_tiempo.empty:
+        st.success("No se detectaron diferencias en los tiempos de la detención.")
+    else:
+        columnas_diferencias = [
+            "fila_collahuasi",
+            "equipo",
+            "inicio_collahuasi",
+            "termino_collahuasi",
+            "inicio_amt",
+            "termino_amt",
+            "duracion_collahuasi_h",
+            "duracion_amt_h",
+            "errores",
+            "observaciones",
+            "razon_collahuasi",
+            "comentario_collahuasi",
+            "descripcion_amt",
+        ]
+
+        columnas_diferencias = [
+            c for c in columnas_diferencias if c in df_diferencias_tiempo.columns
+        ]
+
+        st.dataframe(
+            df_diferencias_tiempo[columnas_diferencias],
+            use_container_width=True,
+            hide_index=True,
         )
 
-        correctos = (
-            len(df_resultado[df_resultado["resultado"] == "OK"])
-            if not df_resultado.empty
-            else 0
+    st.subheader("Hallazgos de cortes / continuidad por evento")
+
+    if df_eventos_error.empty:
+        st.info("No se detectaron hallazgos agrupados por evento.")
+    else:
+        st.dataframe(
+            df_eventos_error,
+            use_container_width=True,
+            hide_index=True,
         )
 
-        total_in_progress = len(df_in_progress) if not df_in_progress.empty else 0
+    st.subheader("Revisión detenciones In Progress")
 
-        errores_in_progress = (
-            len(df_in_progress[df_in_progress["resultado"] == "ERROR"])
-            if total_in_progress
-            else 0
+    if df_in_progress.empty:
+        st.info("No se detectaron eventos In Progress con la configuración actual.")
+    else:
+        st.dataframe(
+            df_in_progress,
+            use_container_width=True,
+            hide_index=True,
         )
 
-        c1, c2, c3, c4, c5 = st.columns(5)
-
-        c1.metric("Rango Daily", rango_txt)
-        c2.metric("Registros revisados", total)
-        c3.metric("Correctos", correctos)
-        c4.metric("Pendientes AMT", pendientes_amt)
-        c5.metric("In Progress", f"{total_in_progress} / {errores_in_progress} alerta")
-
-        df_pendientes_amt = (
-            df_resultado[df_resultado["resultado"] == "PENDIENTE_INGRESO_AMT"].copy()
-            if not df_resultado.empty
-            else pd.DataFrame()
+    with st.expander("Ver todos los registros revisados"):
+        st.dataframe(
+            df_resultado,
+            use_container_width=True,
+            hide_index=True,
         )
-
-        df_diferencias_tiempo = (
-            df_resultado[
-                (df_resultado["resultado"] != "OK")
-                & (df_resultado["resultado"] != "PENDIENTE_INGRESO_AMT")
-            ].copy()
-            if not df_resultado.empty
-            else pd.DataFrame()
-        )
-
-        st.subheader("Detenciones pendientes de ingreso en AMT")
-
-        if df_pendientes_amt.empty:
-            st.success("No se detectaron detenciones pendientes de ingreso en AMT.")
-        else:
-            columnas_pendientes = [
-                "fila_collahuasi",
-                "equipo",
-                "inicio_collahuasi",
-                "termino_collahuasi",
-                "duracion_collahuasi_h",
-                "errores",
-                "razon_collahuasi",
-                "comentario_collahuasi",
-            ]
-
-            columnas_pendientes = [
-                c for c in columnas_pendientes if c in df_pendientes_amt.columns
-            ]
-
-            st.dataframe(
-                df_pendientes_amt[columnas_pendientes],
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        st.subheader("Diferencia en los tiempos de la detención")
-
-        if df_diferencias_tiempo.empty:
-            st.success("No se detectaron diferencias en los tiempos de la detención.")
-        else:
-            columnas_diferencias = [
-                "fila_collahuasi",
-                "equipo",
-                "inicio_collahuasi",
-                "termino_collahuasi",
-                "inicio_amt",
-                "termino_amt",
-                "duracion_collahuasi_h",
-                "duracion_amt_h",
-                "errores",
-                "observaciones",
-                "razon_collahuasi",
-                "comentario_collahuasi",
-                "descripcion_amt",
-            ]
-
-            columnas_diferencias = [
-                c for c in columnas_diferencias if c in df_diferencias_tiempo.columns
-            ]
-
-            st.dataframe(
-                df_diferencias_tiempo[columnas_diferencias],
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        st.subheader("Hallazgos de cortes / continuidad por evento")
-
-        if df_eventos_error.empty:
-            st.info("No se detectaron hallazgos agrupados por evento.")
-        else:
-            st.dataframe(
-                df_eventos_error,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        st.subheader("Revisión detenciones In Progress")
-
-        if df_in_progress.empty:
-            st.info("No se detectaron eventos In Progress con la configuración actual.")
-        else:
-            st.dataframe(
-                df_in_progress,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        with st.expander("Ver todos los registros revisados"):
-            st.dataframe(
-                df_resultado,
-                use_container_width=True,
-                hide_index=True,
-            )
 
 
 if __name__ == "__main__":
