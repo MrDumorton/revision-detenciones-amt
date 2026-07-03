@@ -31,7 +31,7 @@ from reportlab.platypus import (
 st.set_page_config(
     page_title="Revisión de Detenciones AMT",
     page_icon="🛠️",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
@@ -63,16 +63,21 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica el estilo visual corporativo igual a la app Procesador de archivos.
-    Usa la carpeta static para cargar el fondo.
+    Aplica fondo corporativo y estructura visual tipo dashboard:
+    menú lateral izquierdo + resultados a la derecha.
     """
 
     ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
+    ruta_logo = Path(__file__).parent / "static" / "logo_finning_cat.png"
 
     if not ruta_fondo.exists():
         st.error(f"No se encontró la imagen de fondo en: {ruta_fondo}")
 
+    if not ruta_logo.exists():
+        st.warning(f"No se encontró el logo en: {ruta_logo}")
+
     fondo_url = "app/static/fondo_finning_upscayl.png"
+    logo_url = "app/static/logo_finning_cat.png"
 
     css = """
     <style>
@@ -80,16 +85,15 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
-    /* Fondo general de la aplicación */
     .stApp,
     [data-testid="stAppViewContainer"] {
         background-image:
             linear-gradient(
                 180deg,
-                rgba(11, 13, 18, 0.78) 0px,
-                rgba(11, 13, 18, 0.40) 150px,
-                rgba(255, 255, 255, 0.06) 330px,
-                rgba(255, 255, 255, 0.06) 100%
+                rgba(11, 13, 18, 0.55) 0px,
+                rgba(11, 13, 18, 0.35) 150px,
+                rgba(255, 255, 255, 0.08) 330px,
+                rgba(255, 255, 255, 0.08) 100%
             ),
             url("__FONDO_URL__") !important;
         background-size: cover !important;
@@ -98,7 +102,6 @@ def aplicar_fondo_corporativo():
         background-attachment: fixed !important;
     }
 
-    /* Estructura interna transparente */
     [data-testid="stAppViewContainer"] > .main,
     section.main,
     [data-testid="stMain"],
@@ -106,147 +109,146 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
-    /* Header superior de Streamlit transparente */
     [data-testid="stHeader"] {
         background: transparent !important;
     }
 
-    /* Contenedor principal flotante */
     .block-container {
-        width: min(1500px, calc(100vw - 80px)) !important;
-        max-width: 1500px !important;
-        background-color: rgba(255, 255, 255, 0.75) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        padding: 2.5rem 3rem !important;
-        border-radius: 18px !important;
-        border-top: 8px solid #FFCD11 !important;
-        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.28) !important;
-        margin-top: 2rem !important;
-        margin-bottom: 2rem !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
+        width: min(1600px, calc(100vw - 50px)) !important;
+        max-width: 1600px !important;
+        padding: 1.5rem 1.5rem !important;
+        margin-top: 0.8rem !important;
+        margin-bottom: 1.5rem !important;
     }
 
-    /* Tarjeta superior negra */
-    .header-card {
-        background-color: rgba(0, 0, 0, 0.96) !important;
-        padding: 42px 34px !important;
-        border-radius: 20px !important;
-        border-bottom: 8px solid #FFCD11 !important;
-        margin-bottom: 34px !important;
-        min-height: 230px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.25) !important;
-    }
-
-    .header-title {
-        color: #FFFFFF !important;
-        font-size: 44px !important;
-        font-weight: 800 !important;
-        line-height: 1.15 !important;
-        margin-bottom: 18px !important;
-    }
-
-    .header-subtitle {
-        color: #E8E8E8 !important;
-        font-size: 20px !important;
-        line-height: 1.6 !important;
-        font-weight: 400 !important;
-        margin: 0 !important;
-    }
-
-    h1, h2, h3 {
-        color: #000000 !important;
-        font-weight: 800 !important;
-    }
-
-    .block-container > div label,
-    .block-container > div span {
-        color: #111111 !important;
-    }
-
-    /* Menú lateral flotante */
+    /* Oculta sidebar nativo, usaremos menú visual propio */
     section[data-testid="stSidebar"] {
-        background: transparent !important;
+        display: none !important;
     }
 
-    section[data-testid="stSidebar"] > div:first-child {
-        background: rgba(11, 13, 18, 0.93) !important;
-        margin: 1rem 0 1rem 1rem !important;
-        border-radius: 18px !important;
-        border: 1px solid rgba(255, 205, 17, 0.35) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
-    }
-
-    section[data-testid="stSidebar"] * {
-        color: #FFFFFF !important;
-    }
-
-    section[data-testid="stSidebar"] .stButton > button {
-        background-color: #FFCD11 !important;
-        color: #000000 !important;
-        border: 2px solid #000000 !important;
-        border-radius: 8px !important;
-        font-weight: 800 !important;
-    }
-
-    section[data-testid="stSidebar"] .stButton > button:hover {
-        background-color: #000000 !important;
-        color: #FFCD11 !important;
-        border: 2px solid #FFCD11 !important;
-    }
-
-    /* Botón de abrir/cerrar sidebar */
     [data-testid="collapsedControl"] {
-        background: rgba(11, 13, 18, 0.90) !important;
-        border-radius: 10px !important;
-        padding: 6px !important;
+        display: none !important;
     }
 
-    [data-testid="collapsedControl"] svg {
-        fill: #FFCD11 !important;
+    /* Panel lateral izquierdo */
+    .menu-panel {
+        background: rgba(8, 10, 15, 0.96);
+        border-radius: 0px 22px 22px 0px;
+        border-right: 1px solid rgba(255, 205, 17, 0.35);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        padding: 22px 18px;
+        min-height: calc(100vh - 40px);
     }
 
-    /* Selectbox */
-    div[data-baseweb="select"] > div {
-        background-color: #1F212A !important;
-        color: #FFFFFF !important;
-        border-radius: 8px !important;
-        border: 1px solid #1F212A !important;
+    .logo-box {
+        background: #ffffff;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 205, 17, 0.65);
     }
 
-    div[data-baseweb="select"] span {
-        color: #FFFFFF !important;
+    .logo-box img {
+        width: 100%;
+        display: block;
     }
 
-    /* Number input */
-    div[data-testid="stNumberInput"] input {
-        background-color: #1F212A !important;
-        color: #FFFFFF !important;
-        border-radius: 8px !important;
-        border: 1px solid #1F212A !important;
+    .menu-title {
+        color: #ffffff !important;
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.25;
+        text-transform: uppercase;
+        margin-bottom: 10px;
     }
 
-    /* Checkbox */
-    div[data-testid="stCheckbox"] label span {
-        color: #FFFFFF !important;
+    .menu-line {
+        width: 72px;
+        height: 4px;
+        background: #FFCD11;
+        margin: 12px 0 20px 0;
+        border-radius: 4px;
     }
 
-    /* Cargador de archivos */
+    .step-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 18px;
+        margin-bottom: 8px;
+    }
+
+    .step-number {
+        min-width: 28px;
+        height: 28px;
+        background: #FFCD11;
+        color: #000000;
+        border-radius: 999px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+    }
+
+    .step-title {
+        color: #ffffff !important;
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .step-desc {
+        color: #cbd5e1 !important;
+        font-size: 12px;
+        margin: 2px 0 10px 38px;
+        line-height: 1.35;
+    }
+
+    .menu-footer {
+        color: #cbd5e1 !important;
+        font-size: 12px;
+        margin-top: 28px;
+        border-top: 1px solid rgba(255, 205, 17, 0.35);
+        padding-top: 16px;
+        line-height: 1.4;
+    }
+
+    /* Panel derecho */
+    .report-panel {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 22px;
+        padding: 26px 30px;
+        min-height: calc(100vh - 40px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .report-title {
+        color: #111111 !important;
+        font-size: 34px;
+        font-weight: 900;
+        margin: 0 0 4px 0;
+        text-transform: uppercase;
+    }
+
+    .report-subtitle {
+        color: #6b7280 !important;
+        font-size: 15px;
+        margin-bottom: 22px;
+    }
+
+    /* File uploader dentro del menú */
     section[data-testid="stFileUploaderDropzone"] {
-        background-color: rgba(255, 255, 255, 0.70) !important;
-        border: 2px dashed #FFCD11 !important;
-        border-radius: 14px !important;
-        padding: 22px !important;
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border: 1.5px dashed #FFCD11 !important;
+        border-radius: 10px !important;
+        padding: 16px !important;
     }
 
     section[data-testid="stFileUploaderDropzone"] p,
     section[data-testid="stFileUploaderDropzone"] span,
     section[data-testid="stFileUploaderDropzone"] small {
-        color: #111111 !important;
+        color: #ffffff !important;
     }
 
     section[data-testid="stFileUploaderDropzone"] button {
@@ -254,7 +256,7 @@ def aplicar_fondo_corporativo():
         color: #000000 !important;
         border: 2px solid #000000 !important;
         border-radius: 8px !important;
-        font-weight: 800 !important;
+        font-weight: 900 !important;
     }
 
     section[data-testid="stFileUploaderDropzone"] button:hover {
@@ -263,14 +265,15 @@ def aplicar_fondo_corporativo():
         border: 2px solid #FFCD11 !important;
     }
 
-    /* Botones normales */
+    /* Botones */
     .stButton > button {
+        width: 100%;
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 2px solid #000000 !important;
         border-radius: 8px !important;
-        padding: 0.6rem 1.2rem !important;
-        font-weight: 800 !important;
+        padding: 0.7rem 1rem !important;
+        font-weight: 900 !important;
         text-transform: uppercase;
     }
 
@@ -279,7 +282,7 @@ def aplicar_fondo_corporativo():
     .stButton > button div {
         color: #000000 !important;
         opacity: 1 !important;
-        font-weight: 800 !important;
+        font-weight: 900 !important;
     }
 
     .stButton > button:hover {
@@ -294,20 +297,20 @@ def aplicar_fondo_corporativo():
         color: #FFCD11 !important;
     }
 
-    /* Botón de descarga */
     .stDownloadButton > button {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-        border: 2px solid #FFCD11 !important;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
         border-radius: 8px !important;
-        padding: 0.6rem 1.2rem !important;
+        padding: 0.7rem 1rem !important;
         font-weight: 800 !important;
     }
 
     .stDownloadButton > button p,
     .stDownloadButton > button span,
     .stDownloadButton > button div {
-        color: #FFFFFF !important;
+        color: #ffffff !important;
         opacity: 1 !important;
         font-weight: 800 !important;
     }
@@ -315,7 +318,7 @@ def aplicar_fondo_corporativo():
     .stDownloadButton > button:hover {
         background-color: #FFCD11 !important;
         color: #000000 !important;
-        border: 2px solid #000000 !important;
+        border: 1px solid #000000 !important;
     }
 
     .stDownloadButton > button:hover p,
@@ -326,39 +329,29 @@ def aplicar_fondo_corporativo():
 
     /* Franja informativa verde */
     .franja-info-verde {
-        background-color: rgba(187, 247, 208, 0.70) !important;
-        color: #22c55e !important;
+        background-color: rgba(187, 247, 208, 0.80) !important;
+        color: #16a34a !important;
         border-radius: 10px !important;
-        padding: 18px 20px !important;
-        margin-top: 20px !important;
-        margin-bottom: 20px !important;
-        font-size: 18px !important;
-        font-weight: 500 !important;
-        border: 1px solid rgba(134, 239, 172, 0.65) !important;
+        padding: 16px 18px !important;
+        margin-top: 12px !important;
+        margin-bottom: 18px !important;
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(134, 239, 172, 0.75) !important;
     }
 
     .franja-info-verde strong {
-        color: #16a34a !important;
-        font-weight: 700 !important;
+        color: #15803d !important;
+        font-weight: 900 !important;
     }
 
-    /* Alertas */
-    div[data-testid="stAlert"] {
-        border-radius: 12px !important;
-    }
-
-    div[data-testid="stAlert"] p,
-    div[data-testid="stAlert"] div {
-        color: #111111 !important;
-    }
-
-    /* Métricas superiores */
+    /* Métricas */
     div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.90) !important;
+        background-color: #ffffff !important;
         border-radius: 14px !important;
         padding: 14px 16px !important;
-        border-left: 5px solid #FFCD11 !important;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14) !important;
+        border: 1px solid #e5e7eb !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
     }
 
     div[data-testid="stMetric"] * {
@@ -370,29 +363,42 @@ def aplicar_fondo_corporativo():
     div[data-testid="stMetricLabel"],
     div[data-testid="stMetricLabel"] p,
     div[data-testid="stMetricLabel"] div {
-        color: #111111 !important;
+        color: #374151 !important;
         font-weight: 700 !important;
-        font-size: 15px !important;
+        font-size: 14px !important;
     }
 
     div[data-testid="stMetricValue"],
     div[data-testid="stMetricValue"] div {
-        color: #000000 !important;
+        color: #111111 !important;
         font-weight: 900 !important;
-        font-size: 30px !important;
+        font-size: 28px !important;
     }
 
     /* Tablas */
     div[data-testid="stDataFrame"] {
         width: 100% !important;
         max-width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.92) !important;
+        background-color: rgba(255, 255, 255, 0.98) !important;
         border-radius: 12px !important;
     }
 
-    /* Expander */
+    h1, h2, h3, h4, p, label, span {
+        color: #111111 !important;
+    }
+
+    .menu-panel h1,
+    .menu-panel h2,
+    .menu-panel h3,
+    .menu-panel h4,
+    .menu-panel p,
+    .menu-panel label,
+    .menu-panel span {
+        color: #ffffff !important;
+    }
+
     details {
-        background: rgba(255, 255, 255, 0.80) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
         border-radius: 12px !important;
         padding: 0.35rem 0.75rem !important;
     }
@@ -400,7 +406,7 @@ def aplicar_fondo_corporativo():
     """
 
     st.markdown(
-        css.replace("__FONDO_URL__", fondo_url),
+        css.replace("__FONDO_URL__", fondo_url).replace("__LOGO_URL__", logo_url),
         unsafe_allow_html=True
     )
 
@@ -1902,69 +1908,110 @@ def generar_excel_resultados(
 
 def main():
     aplicar_fondo_corporativo()
-    mostrar_encabezado_corporativo()
 
-    col1, col2 = st.columns(2)
+    col_menu, col_reporte = st.columns([0.23, 0.77], gap="large")
 
-    with col1:
+    with col_menu:
+        st.markdown(
+            """
+            <div class="menu-panel">
+                <div class="logo-box">
+                    <img src="app/static/logo_finning_cat.png">
+                </div>
+
+                <div class="menu-title">
+                    Validación<br>Detenciones AMT
+                </div>
+                <div class="menu-line"></div>
+
+                <div class="step-row">
+                    <div class="step-number">1</div>
+                    <p class="step-title">Subir archivos Excel</p>
+                </div>
+                <p class="step-desc">
+                    Carga DailyDowntimeLog y Detenciones Collahuasi.
+                </p>
+            """,
+            unsafe_allow_html=True
+        )
+
         archivo_daily = st.file_uploader(
-            "1. Cargar DailyDowntimeLog.xlsx",
+            "DailyDowntimeLog.xlsx",
             type=["xlsx"],
             key="archivo_daily"
         )
 
-    with col2:
         archivo_collahuasi = st.file_uploader(
-            "2. Cargar DETENCIONES COLLAHUASI 2026.xlsx",
+            "DETENCIONES COLLAHUASI 2026.xlsx",
             type=["xlsx"],
             key="archivo_collahuasi"
         )
 
-    st.sidebar.header("Configuración")
-
-    # Tolerancia fija: 0 minutos.
-    # Según la lógica solicitada, no debe existir diferencia permitida entre los tiempos.
-    tolerancia_minutos = 0
-
-    filtrar_por_rango_daily = st.sidebar.checkbox(
-        "Validar solo registros Collahuasi dentro del rango DailyDowntimeLog",
-        value=True,
-    )
-
-    validar_continuidad = st.sidebar.checkbox(
-        "Validar gaps/solapamientos entre cortes Collahuasi",
-        value=True,
-    )
-
-    # La cobertura total del evento AMT se valida siempre según la lógica solicitada:
-    # AMT debe cubrir el inicio y término de la detención continua indicada en Collahuasi.
-    validar_cobertura_total = True
-
-    # Parámetros In Progress fijos según la lógica definida.
-    # No se muestran en la barra lateral para evitar cambios manuales de criterio.
-    detectar_in_progress_por_0800 = False
-    ventana_in_progress_horas = 12
-    max_gap_in_progress_horas = 0
-
-    if archivo_daily is None or archivo_collahuasi is None:
         st.markdown(
             """
-            <div class="franja-info-verde">
-                Carga ambos archivos para iniciar la revisión.
+                <div class="step-row">
+                    <div class="step-number">2</div>
+                    <p class="step-title">Comparar detenciones</p>
+                </div>
+                <p class="step-desc">
+                    Valida respaldo AMT, tiempos, continuidad e In Progress.
+                </p>
+            """,
+            unsafe_allow_html=True
+        )
+
+        comparar = st.button("▶ Comparar detenciones", type="primary")
+
+        st.markdown(
+            """
+                <div class="step-row">
+                    <div class="step-number">3</div>
+                    <p class="step-title">Descargar reporte</p>
+                </div>
+                <p class="step-desc">
+                    Los botones de descarga aparecerán después de procesar.
+                </p>
+
+                <div class="menu-footer">
+                    La revisión valida que las detenciones de Collahuasi tengan respaldo en AMT.
+                </div>
             </div>
             """,
             unsafe_allow_html=True
         )
-        return
 
-    st.markdown(
-        """
-        <div class="franja-info-verde">
-            Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    with col_reporte:
+        st.markdown(
+            """
+            <div class="report-panel">
+                <div class="report-title">Reporte ejecutivo de validación</div>
+                <div class="report-subtitle">
+                    Resumen de revisión entre Detenciones Collahuasi y DailyDowntimeLog / AMT.
+                </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if archivo_daily is None or archivo_collahuasi is None:
+            st.markdown(
+                """
+                <div class="franja-info-verde">
+                    Carga ambos archivos desde el menú lateral para iniciar la revisión.
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+            return
+
+        st.markdown(
+            """
+            <div class="franja-info-verde">
+                Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     if st.button("Comparar detenciones", type="primary"):
         with st.spinner("Leyendo archivos y comparando registros..."):
