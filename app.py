@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import datetime, date, time, timedelta
 from typing import Dict, List, Optional, Tuple
 
-
 import pandas as pd
 import streamlit as st
 from reportlab.lib import colors
@@ -65,14 +64,10 @@ EPS_HORAS = 1e-6
 
 def aplicar_fondo_corporativo():
     """
-    Aplica fondo corporativo y estructura visual tipo dashboard:
-    menú lateral izquierdo + resultados a la derecha.
+    Aplica el estilo visual tipo dashboard:
+    menú lateral izquierdo + reporte ejecutivo a la derecha.
+    Usa la carpeta static para cargar el fondo y el logo.
     """
-    def html(bloque: str):
-    st.markdown(
-        dedent(bloque).strip(),
-        unsafe_allow_html=True
-    )
 
     ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
     ruta_logo = Path(__file__).parent / "static" / "logo_finning_cat.png"
@@ -81,10 +76,9 @@ def aplicar_fondo_corporativo():
         st.error(f"No se encontró la imagen de fondo en: {ruta_fondo}")
 
     if not ruta_logo.exists():
-        st.warning(f"No se encontró el logo en: {ruta_logo}")
+        st.warning(f"No se encontró el logo en: {ruta_logo}. Debe existir static/logo_finning_cat.png")
 
     fondo_url = "app/static/fondo_finning_upscayl.png"
-    logo_url = "app/static/logo_finning_cat.png"
 
     css = """
     <style>
@@ -97,10 +91,10 @@ def aplicar_fondo_corporativo():
         background-image:
             linear-gradient(
                 180deg,
-                rgba(11, 13, 18, 0.55) 0px,
-                rgba(11, 13, 18, 0.35) 150px,
-                rgba(255, 255, 255, 0.08) 330px,
-                rgba(255, 255, 255, 0.08) 100%
+                rgba(11, 13, 18, 0.70) 0px,
+                rgba(11, 13, 18, 0.35) 170px,
+                rgba(255, 255, 255, 0.06) 330px,
+                rgba(255, 255, 255, 0.06) 100%
             ),
             url("__FONDO_URL__") !important;
         background-size: cover !important;
@@ -120,44 +114,35 @@ def aplicar_fondo_corporativo():
         background: transparent !important;
     }
 
-    .block-container {
-        width: min(1600px, calc(100vw - 50px)) !important;
-        max-width: 1600px !important;
-        padding: 1.5rem 1.5rem !important;
-        margin-top: 0.8rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-
-    /* Oculta sidebar nativo, usaremos menú visual propio */
+    [data-testid="collapsedControl"],
     section[data-testid="stSidebar"] {
         display: none !important;
     }
 
-    [data-testid="collapsedControl"] {
-        display: none !important;
+    .block-container {
+        width: min(1660px, calc(100vw - 42px)) !important;
+        max-width: 1660px !important;
+        padding: 1.2rem 1.3rem !important;
+        margin-top: 0.35rem !important;
+        margin-bottom: 1.2rem !important;
     }
 
-    /* Panel lateral izquierdo */
+    /* Panel lateral visual */
     .menu-panel {
         background: rgba(8, 10, 15, 0.96) !important;
         border-radius: 18px !important;
         border: 1px solid rgba(255, 205, 17, 0.35) !important;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
         padding: 20px 18px !important;
-        margin-bottom: 16px !important;
-    }
-
-    .menu-panel-small {
-        padding-top: 16px !important;
-        padding-bottom: 16px !important;
+        margin-bottom: 14px !important;
     }
 
     .logo-box {
         background: #ffffff !important;
-        border-radius: 4px !important;
+        border-radius: 5px !important;
         padding: 8px !important;
         margin-bottom: 18px !important;
-        border: 1px solid rgba(255, 205, 17, 0.65) !important;
+        border: 1px solid rgba(255, 205, 17, 0.75) !important;
     }
 
     .logo-box img {
@@ -175,7 +160,7 @@ def aplicar_fondo_corporativo():
     }
 
     .menu-line {
-        width: 72px !important;
+        width: 78px !important;
         height: 4px !important;
         background: #FFCD11 !important;
         margin: 12px 0 20px 0 !important;
@@ -186,7 +171,7 @@ def aplicar_fondo_corporativo():
         display: flex !important;
         align-items: flex-start !important;
         gap: 10px !important;
-        margin-top: 12px !important;
+        margin-top: 15px !important;
         margin-bottom: 8px !important;
     }
 
@@ -225,33 +210,36 @@ def aplicar_fondo_corporativo():
         padding-top: 14px !important;
         line-height: 1.4 !important;
     }
+
     /* Panel derecho */
-    .report-panel {
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 22px;
-        padding: 26px 30px;
-        min-height: calc(100vh - 40px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    .report-header {
+        background: rgba(255, 255, 255, 0.96) !important;
+        border-radius: 18px !important;
+        border-left: 6px solid #FFCD11 !important;
+        padding: 22px 26px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16) !important;
     }
 
     .report-title {
         color: #111111 !important;
-        font-size: 34px;
-        font-weight: 900;
-        margin: 0 0 4px 0;
-        text-transform: uppercase;
+        font-size: 34px !important;
+        font-weight: 900 !important;
+        margin: 0 0 4px 0 !important;
+        text-transform: uppercase !important;
+        line-height: 1.15 !important;
     }
 
     .report-subtitle {
         color: #6b7280 !important;
-        font-size: 15px;
-        margin-bottom: 22px;
+        font-size: 15px !important;
+        margin: 0 !important;
     }
 
-    /* File uploader dentro del menú */
+    /* File uploader */
     section[data-testid="stFileUploaderDropzone"] {
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        border: 1.5px dashed #FFCD11 !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 1.6px dashed #FFCD11 !important;
         border-radius: 10px !important;
         padding: 16px !important;
     }
@@ -276,16 +264,15 @@ def aplicar_fondo_corporativo():
         border: 2px solid #FFCD11 !important;
     }
 
-    /* Botones */
     .stButton > button {
-        width: 100%;
+        width: 100% !important;
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 2px solid #000000 !important;
         border-radius: 8px !important;
-        padding: 0.7rem 1rem !important;
+        padding: 0.70rem 1rem !important;
         font-weight: 900 !important;
-        text-transform: uppercase;
+        text-transform: uppercase !important;
     }
 
     .stButton > button p,
@@ -309,12 +296,11 @@ def aplicar_fondo_corporativo():
     }
 
     .stDownloadButton > button {
-        width: 100%;
-        background-color: rgba(255, 255, 255, 0.06) !important;
+        background-color: #000000 !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        border: 2px solid #FFCD11 !important;
         border-radius: 8px !important;
-        padding: 0.7rem 1rem !important;
+        padding: 0.65rem 1rem !important;
         font-weight: 800 !important;
     }
 
@@ -329,7 +315,7 @@ def aplicar_fondo_corporativo():
     .stDownloadButton > button:hover {
         background-color: #FFCD11 !important;
         color: #000000 !important;
-        border: 1px solid #000000 !important;
+        border: 2px solid #000000 !important;
     }
 
     .stDownloadButton > button:hover p,
@@ -338,9 +324,8 @@ def aplicar_fondo_corporativo():
         color: #000000 !important;
     }
 
-    /* Franja informativa verde */
     .franja-info-verde {
-        background-color: rgba(187, 247, 208, 0.80) !important;
+        background-color: rgba(187, 247, 208, 0.86) !important;
         color: #16a34a !important;
         border-radius: 10px !important;
         padding: 16px 18px !important;
@@ -356,13 +341,22 @@ def aplicar_fondo_corporativo():
         font-weight: 900 !important;
     }
 
-    /* Métricas */
+    div[data-testid="stAlert"] {
+        border-radius: 12px !important;
+    }
+
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] div {
+        color: #111111 !important;
+    }
+
     div[data-testid="stMetric"] {
-        background-color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.96) !important;
         border-radius: 14px !important;
         padding: 14px 16px !important;
         border: 1px solid #e5e7eb !important;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+        border-left: 5px solid #FFCD11 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
     }
 
     div[data-testid="stMetric"] * {
@@ -386,14 +380,6 @@ def aplicar_fondo_corporativo():
         font-size: 28px !important;
     }
 
-    /* Tablas */
-    div[data-testid="stDataFrame"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.98) !important;
-        border-radius: 12px !important;
-    }
-
     h1, h2, h3, h4, p, label, span {
         color: #111111 !important;
     }
@@ -404,8 +390,16 @@ def aplicar_fondo_corporativo():
     .menu-panel h4,
     .menu-panel p,
     .menu-panel label,
-    .menu-panel span {
+    .menu-panel span,
+    .menu-panel div {
         color: #ffffff !important;
+    }
+
+    div[data-testid="stDataFrame"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        background-color: rgba(255, 255, 255, 0.98) !important;
+        border-radius: 12px !important;
     }
 
     details {
@@ -417,9 +411,14 @@ def aplicar_fondo_corporativo():
     """
 
     st.markdown(
-        css.replace("__FONDO_URL__", fondo_url).replace("__LOGO_URL__", logo_url),
-        unsafe_allow_html=True
+        css.replace("__FONDO_URL__", fondo_url),
+        unsafe_allow_html=True,
     )
+
+
+def render_html(bloque: str):
+    """Renderiza HTML evitando que Markdown lo muestre como bloque de código."""
+    st.markdown(dedent(bloque).strip(), unsafe_allow_html=True)
 
 def mostrar_encabezado_corporativo():
     st.markdown(
@@ -1923,23 +1922,21 @@ def main():
     col_menu, col_reporte = st.columns([0.22, 0.78], gap="large")
 
     with col_menu:
-        html("""
+        render_html("""
         <div class="menu-panel">
             <div class="logo-box">
                 <img src="app/static/logo_finning_cat.png">
             </div>
 
             <div class="menu-title">
-                VALIDACIÓN<br>DETENCIONES AMT
+                Validación<br>Detenciones AMT
             </div>
-
             <div class="menu-line"></div>
 
             <div class="step-row">
                 <div class="step-number">1</div>
                 <p class="step-title">Subir archivos Excel</p>
             </div>
-
             <p class="step-desc">
                 Carga DailyDowntimeLog y Detenciones Collahuasi.
             </p>
@@ -1950,23 +1947,22 @@ def main():
             "DailyDowntimeLog.xlsx",
             type=["xlsx"],
             key="archivo_daily",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
 
         archivo_collahuasi = st.file_uploader(
             "DETENCIONES COLLAHUASI 2026.xlsx",
             type=["xlsx"],
             key="archivo_collahuasi",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
 
-        html("""
-        <div class="menu-panel menu-panel-small">
+        render_html("""
+        <div class="menu-panel">
             <div class="step-row">
                 <div class="step-number">2</div>
                 <p class="step-title">Comparar detenciones</p>
             </div>
-
             <p class="step-desc">
                 Valida respaldo AMT, diferencias de tiempo, continuidad e In Progress.
             </p>
@@ -1975,17 +1971,15 @@ def main():
 
         comparar = st.button("▶ Comparar detenciones", type="primary")
 
-        html("""
-        <div class="menu-panel menu-panel-small">
+        render_html("""
+        <div class="menu-panel">
             <div class="step-row">
                 <div class="step-number">3</div>
                 <p class="step-title">Descargar reporte</p>
             </div>
-
             <p class="step-desc">
-                Las descargas aparecerán después de procesar.
+                Las descargas aparecerán en el panel derecho después de procesar.
             </p>
-
             <div class="menu-footer">
                 La revisión valida que las detenciones de Collahuasi tengan respaldo en AMT.
             </div>
@@ -1993,17 +1987,16 @@ def main():
         """)
 
     with col_reporte:
-        st.markdown(
-            """
+        render_html("""
+        <div class="report-header">
             <div class="report-title">Reporte ejecutivo de validación</div>
             <div class="report-subtitle">
                 Resumen de revisión entre Detenciones Collahuasi y DailyDowntimeLog / AMT.
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        """)
 
-        # Parámetros fijos
+        # Criterios fijos según la lógica solicitada.
         tolerancia_minutos = 0
         filtrar_por_rango_daily = True
         validar_continuidad = True
@@ -2013,24 +2006,18 @@ def main():
         max_gap_in_progress_horas = 0
 
         if archivo_daily is None or archivo_collahuasi is None:
-            st.markdown(
-                """
-                <div class="franja-info-verde">
-                    Carga ambos archivos desde el menú lateral para iniciar la revisión.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            render_html("""
+            <div class="franja-info-verde">
+                Carga ambos archivos desde el menú lateral para iniciar la revisión.
+            </div>
+            """)
             return
 
-        st.markdown(
-            """
-            <div class="franja-info-verde">
-                Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        render_html("""
+        <div class="franja-info-verde">
+            Archivos cargados correctamente. Presiona <strong>Comparar detenciones</strong> para generar el informe.
+        </div>
+        """)
 
         if not comparar:
             return
@@ -2115,7 +2102,6 @@ def main():
         )
 
         c1, c2, c3, c4, c5 = st.columns(5)
-
         c1.metric("Rango Daily", rango_txt)
         c2.metric("Registros revisados", total)
         c3.metric("Correctos", correctos)
@@ -2155,7 +2141,6 @@ def main():
             columnas_pendientes = [
                 c for c in columnas_pendientes if c in df_pendientes_amt.columns
             ]
-
             st.dataframe(
                 df_pendientes_amt[columnas_pendientes],
                 use_container_width=True,
@@ -2185,7 +2170,6 @@ def main():
             columnas_diferencias = [
                 c for c in columnas_diferencias if c in df_diferencias_tiempo.columns
             ]
-
             st.dataframe(
                 df_diferencias_tiempo[columnas_diferencias],
                 use_container_width=True,
@@ -2215,7 +2199,6 @@ def main():
             )
 
         d1, d2 = st.columns(2)
-
         with d1:
             st.download_button(
                 "📄 Descargar informe PDF",
@@ -2223,7 +2206,6 @@ def main():
                 file_name="informe_revision_detenciones.pdf",
                 mime="application/pdf",
             )
-
         with d2:
             st.download_button(
                 "📊 Descargar detalle Excel",
