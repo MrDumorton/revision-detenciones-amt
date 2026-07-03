@@ -63,7 +63,7 @@ EPS_HORAS = 1e-6
 # ============================================================
 
 def render_html(bloque: str):
-    """Renderiza HTML sin que Streamlit lo muestre como texto."""
+    """Renderiza HTML evitando que Streamlit lo muestre como bloque de código."""
     st.markdown(
         dedent(bloque).strip(),
         unsafe_allow_html=True,
@@ -86,7 +86,6 @@ def aplicar_fondo_corporativo():
         st.warning(f"No se encontró el logo en: {ruta_logo}")
 
     fondo_url = "app/static/fondo_finning_upscayl.png"
-    logo_url = "app/static/logo_finning_cat.png"
 
     css = """
     <style>
@@ -99,8 +98,8 @@ def aplicar_fondo_corporativo():
         background-image:
             linear-gradient(
                 180deg,
-                rgba(11, 13, 18, 0.65) 0px,
-                rgba(11, 13, 18, 0.35) 180px,
+                rgba(11, 13, 18, 0.62) 0px,
+                rgba(11, 13, 18, 0.34) 180px,
                 rgba(255, 255, 255, 0.04) 360px,
                 rgba(255, 255, 255, 0.04) 100%
             ),
@@ -123,11 +122,11 @@ def aplicar_fondo_corporativo():
     }
 
     .block-container {
-        width: min(1700px, calc(100vw - 30px)) !important;
-        max-width: 1700px !important;
-        padding: 1rem 1.2rem !important;
-        margin-top: 0.5rem !important;
-        margin-bottom: 1rem !important;
+        width: min(1720px, calc(100vw - 24px)) !important;
+        max-width: 1720px !important;
+        padding: 0.9rem 1rem !important;
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.8rem !important;
     }
 
     section[data-testid="stSidebar"],
@@ -135,31 +134,24 @@ def aplicar_fondo_corporativo():
         display: none !important;
     }
 
-    /* Columna izquierda completa */
+    /* ===== FRANJA NEGRA IZQUIERDA COMPLETA ===== */
     div[data-testid="column"]:has(.menu-panel-marker) {
-        background: rgba(8, 10, 15, 0.96) !important;
-        border-radius: 22px !important;
-        border: 1px solid rgba(255, 205, 17, 0.45) !important;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35) !important;
-        padding: 22px 18px !important;
-        min-height: calc(100vh - 40px) !important;
+        background: rgba(0, 0, 0, 0.92) !important;
+        border-radius: 0 22px 22px 0 !important;
+        border-right: 1px solid rgba(255, 205, 17, 0.45) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.38) !important;
+        padding: 18px 18px 24px 18px !important;
+        min-height: calc(100vh - 28px) !important;
     }
 
-    /* Columna derecha */
-    div[data-testid="column"]:has(.report-panel-marker) {
-        background: rgba(255, 255, 255, 0.94) !important;
-        border-radius: 22px !important;
-        border-left: 6px solid #FFCD11 !important;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25) !important;
-        padding: 28px 34px !important;
-        min-height: calc(100vh - 40px) !important;
+    div[data-testid="column"]:has(.menu-panel-marker) > div {
+        background: transparent !important;
     }
 
-    .menu-panel-marker,
-    .report-panel-marker {
-        height: 0;
-        margin: 0;
-        padding: 0;
+    .menu-panel-marker {
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .logo-box {
@@ -179,17 +171,17 @@ def aplicar_fondo_corporativo():
         color: #ffffff !important;
         font-size: 23px !important;
         font-weight: 900 !important;
-        line-height: 1.25 !important;
+        line-height: 1.2 !important;
         text-transform: uppercase !important;
-        margin-top: 10px !important;
+        margin-top: 8px !important;
         margin-bottom: 8px !important;
     }
 
     .menu-line {
-        width: 75px !important;
+        width: 78px !important;
         height: 4px !important;
         background: #FFCD11 !important;
-        margin: 12px 0 22px 0 !important;
+        margin: 10px 0 20px 0 !important;
         border-radius: 4px !important;
     }
 
@@ -197,13 +189,14 @@ def aplicar_fondo_corporativo():
         display: flex !important;
         align-items: center !important;
         gap: 10px !important;
-        margin-top: 22px !important;
+        margin-top: 20px !important;
         margin-bottom: 6px !important;
     }
 
     .step-number {
-        min-width: 28px !important;
-        height: 28px !important;
+        min-width: 30px !important;
+        width: 30px !important;
+        height: 30px !important;
         background: #FFCD11 !important;
         color: #000000 !important;
         border-radius: 999px !important;
@@ -216,7 +209,7 @@ def aplicar_fondo_corporativo():
 
     .step-title {
         color: #ffffff !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 800 !important;
         margin: 0 !important;
     }
@@ -224,8 +217,8 @@ def aplicar_fondo_corporativo():
     .step-desc {
         color: #cbd5e1 !important;
         font-size: 12px !important;
-        margin: 2px 0 12px 38px !important;
-        line-height: 1.35 !important;
+        margin: 2px 0 12px 40px !important;
+        line-height: 1.4 !important;
     }
 
     .menu-footer {
@@ -237,36 +230,34 @@ def aplicar_fondo_corporativo():
         line-height: 1.4 !important;
     }
 
-    .report-title {
-        color: #111111 !important;
-        font-size: 36px !important;
-        font-weight: 900 !important;
-        text-transform: uppercase !important;
-        margin-bottom: 4px !important;
-        line-height: 1.1 !important;
-    }
-
-    .report-subtitle {
-        color: #6b7280 !important;
-        font-size: 16px !important;
-        margin-bottom: 22px !important;
-    }
-
-    /* Upload dentro de la franja izquierda */
-    section[data-testid="stFileUploaderDropzone"] {
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        border: 1.5px dashed #FFCD11 !important;
-        border-radius: 10px !important;
-        padding: 18px !important;
-    }
-
-    section[data-testid="stFileUploaderDropzone"] p,
-    section[data-testid="stFileUploaderDropzone"] span,
-    section[data-testid="stFileUploaderDropzone"] small {
+    /* Texto dentro de la franja izquierda */
+    div[data-testid="column"]:has(.menu-panel-marker) h1,
+    div[data-testid="column"]:has(.menu-panel-marker) h2,
+    div[data-testid="column"]:has(.menu-panel-marker) h3,
+    div[data-testid="column"]:has(.menu-panel-marker) h4,
+    div[data-testid="column"]:has(.menu-panel-marker) p,
+    div[data-testid="column"]:has(.menu-panel-marker) label,
+    div[data-testid="column"]:has(.menu-panel-marker) span,
+    div[data-testid="column"]:has(.menu-panel-marker) small {
         color: #ffffff !important;
     }
 
-    section[data-testid="stFileUploaderDropzone"] button {
+    /* Upload dentro de la franja izquierda */
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border: 1.5px dashed #FFCD11 !important;
+        border-radius: 10px !important;
+        padding: 18px !important;
+        margin-bottom: 12px !important;
+    }
+
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] p,
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] span,
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] small {
+        color: #ffffff !important;
+    }
+
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] button {
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 2px solid #000000 !important;
@@ -274,13 +265,14 @@ def aplicar_fondo_corporativo():
         font-weight: 900 !important;
     }
 
-    section[data-testid="stFileUploaderDropzone"] button:hover {
+    div[data-testid="column"]:has(.menu-panel-marker) section[data-testid="stFileUploaderDropzone"] button:hover {
         background-color: #000000 !important;
         color: #FFCD11 !important;
         border: 2px solid #FFCD11 !important;
     }
 
-    .stButton > button {
+    /* Botones del menú */
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button {
         width: 100% !important;
         background-color: #FFCD11 !important;
         color: #000000 !important;
@@ -291,27 +283,27 @@ def aplicar_fondo_corporativo():
         text-transform: uppercase !important;
     }
 
-    .stButton > button p,
-    .stButton > button span,
-    .stButton > button div {
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button p,
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button span,
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button div {
         color: #000000 !important;
-        opacity: 1 !important;
         font-weight: 900 !important;
+        opacity: 1 !important;
     }
 
-    .stButton > button:hover {
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover {
         background-color: #000000 !important;
         color: #FFCD11 !important;
         border: 2px solid #FFCD11 !important;
     }
 
-    .stButton > button:hover p,
-    .stButton > button:hover span,
-    .stButton > button:hover div {
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover p,
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover span,
+    div[data-testid="column"]:has(.menu-panel-marker) .stButton > button:hover div {
         color: #FFCD11 !important;
     }
 
-    .stDownloadButton > button {
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button {
         width: 100% !important;
         background-color: rgba(255, 255, 255, 0.08) !important;
         color: #ffffff !important;
@@ -319,26 +311,61 @@ def aplicar_fondo_corporativo():
         border-radius: 8px !important;
         padding: 0.7rem 1rem !important;
         font-weight: 800 !important;
+        margin-top: 8px !important;
     }
 
-    .stDownloadButton > button p,
-    .stDownloadButton > button span,
-    .stDownloadButton > button div {
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button p,
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button span,
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button div {
         color: #ffffff !important;
-        opacity: 1 !important;
         font-weight: 800 !important;
+        opacity: 1 !important;
     }
 
-    .stDownloadButton > button:hover {
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover {
         background-color: #FFCD11 !important;
         color: #000000 !important;
         border: 1px solid #000000 !important;
     }
 
-    .stDownloadButton > button:hover p,
-    .stDownloadButton > button:hover span,
-    .stDownloadButton > button:hover div {
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover p,
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover span,
+    div[data-testid="column"]:has(.menu-panel-marker) .stDownloadButton > button:hover div {
         color: #000000 !important;
+    }
+
+    /* ===== PANEL DERECHO ===== */
+    div[data-testid="column"]:has(.report-panel-marker) {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-radius: 0 !important;
+        padding: 26px 34px !important;
+        min-height: calc(100vh - 28px) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.20) !important;
+    }
+
+    div[data-testid="column"]:has(.report-panel-marker) > div {
+        background: transparent !important;
+    }
+
+    .report-panel-marker {
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .report-title {
+        color: #111111 !important;
+        font-size: 34px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        margin-bottom: 6px !important;
+        line-height: 1.1 !important;
+    }
+
+    .report-subtitle {
+        color: #6b7280 !important;
+        font-size: 16px !important;
+        margin-bottom: 22px !important;
     }
 
     .franja-info-verde {
@@ -394,20 +421,6 @@ def aplicar_fondo_corporativo():
         border-radius: 12px !important;
     }
 
-    h1, h2, h3, h4, p, label, span {
-        color: #111111 !important;
-    }
-
-    div[data-testid="column"]:has(.menu-panel-marker) h1,
-    div[data-testid="column"]:has(.menu-panel-marker) h2,
-    div[data-testid="column"]:has(.menu-panel-marker) h3,
-    div[data-testid="column"]:has(.menu-panel-marker) h4,
-    div[data-testid="column"]:has(.menu-panel-marker) p,
-    div[data-testid="column"]:has(.menu-panel-marker) label,
-    div[data-testid="column"]:has(.menu-panel-marker) span {
-        color: #ffffff !important;
-    }
-
     details {
         background: rgba(255, 255, 255, 0.95) !important;
         border-radius: 12px !important;
@@ -417,29 +430,10 @@ def aplicar_fondo_corporativo():
     """
 
     st.markdown(
-        css.replace("__FONDO_URL__", fondo_url).replace("__LOGO_URL__", logo_url),
+        css.replace("__FONDO_URL__", fondo_url),
         unsafe_allow_html=True,
     )
 
-
-def render_html(bloque: str):
-    """Renderiza HTML evitando que Markdown lo muestre como bloque de código."""
-    st.markdown(dedent(bloque).strip(), unsafe_allow_html=True)
-
-def mostrar_encabezado_corporativo():
-    st.markdown(
-        """
-        <div class="header-card">
-            <div class="header-title">
-                Revisión de Detenciones AMT
-            </div>
-            <p class="header-subtitle">
-                Carga ambos archivos Excel, compara las detenciones y descarga el informe de revisión.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 def truncar_a_minuto(valor):
     """Devuelve datetime sin segundos ni microsegundos para comparaciones contra AMT."""
@@ -1925,7 +1919,7 @@ def generar_excel_resultados(
 def main():
     aplicar_fondo_corporativo()
 
-    # Parámetros fijos de la lógica
+    # Parámetros fijos de la lógica de validación
     tolerancia_minutos = 0
     filtrar_por_rango_daily = True
     validar_continuidad = True
