@@ -311,12 +311,52 @@ def aplicar_fondo_corporativo():
     }
 
     /* =====================================================
-       PANEL PRINCIPAL DERECHO
-       ===================================================== */
+   AJUSTE CUANDO EL SIDEBAR ESTÁ ABIERTO
+   Evita que la franja negra tape el reporte.
+   ===================================================== */
+
+    section[data-testid="stSidebar"] {
+        width: 360px !important;
+        min-width: 360px !important;
+        max-width: 360px !important;
+    }
+
+    section[data-testid="stSidebar"] > div:first-child {
+        width: 360px !important;
+        min-width: 360px !important;
+        max-width: 360px !important;
+    }
+
+    /* Desplaza el contenedor principal hacia la derecha cuando el sidebar está visible */
+    body:has(section[data-testid="stSidebar"][aria-expanded="true"]) [data-testid="stAppViewContainer"] {
+        margin-left: 360px !important;
+        width: calc(100vw - 360px) !important;
+    }
+
+    /* Ajusta el ancho interno del reporte cuando el sidebar está visible */
+    body:has(section[data-testid="stSidebar"][aria-expanded="true"]) .block-container {
+        width: min(1380px, calc(100vw - 410px)) !important;
+        max-width: calc(100vw - 410px) !important;
+        margin-left: 24px !important;
+        margin-right: 24px !important;
+    }
+
+    /* Cuando el sidebar está colapsado, el reporte vuelve a ocupar casi todo el ancho */
+    body:not(:has(section[data-testid="stSidebar"][aria-expanded="true"])) .block-container {
+        width: min(1600px, calc(100vw - 60px)) !important;
+        max-width: calc(100vw - 60px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    /* =====================================================
+   PANEL PRINCIPAL DERECHO
+   Se ajusta para no quedar debajo del menú lateral.
+   ===================================================== */
 
     .block-container {
-        width: min(1500px, calc(100vw - 40px)) !important;
-        max-width: 1500px !important;
+        width: min(1380px, calc(100vw - 410px)) !important;
+        max-width: calc(100vw - 410px) !important;
         background: rgba(255, 255, 255, 0.93) !important;
         border-radius: 22px !important;
         border-left: 6px solid #FFCD11 !important;
@@ -324,6 +364,9 @@ def aplicar_fondo_corporativo():
         padding: 2rem 2.5rem !important;
         margin-top: 1rem !important;
         margin-bottom: 1rem !important;
+        margin-left: 24px !important;
+        margin-right: 24px !important;
+        overflow-x: auto !important;
     }
 
     .report-title {
