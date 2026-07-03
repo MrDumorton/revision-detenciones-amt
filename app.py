@@ -4,9 +4,11 @@ import zipfile
 import unicodedata
 import base64
 from pathlib import Path
+from textwrap import dedent
 from dataclasses import dataclass
 from datetime import datetime, date, time, timedelta
 from typing import Dict, List, Optional, Tuple
+
 
 import pandas as pd
 import streamlit as st
@@ -66,6 +68,11 @@ def aplicar_fondo_corporativo():
     Aplica fondo corporativo y estructura visual tipo dashboard:
     menú lateral izquierdo + resultados a la derecha.
     """
+    def html(bloque: str):
+    st.markdown(
+        dedent(bloque).strip(),
+        unsafe_allow_html=True
+    )
 
     ruta_fondo = Path(__file__).parent / "static" / "fondo_finning_upscayl.png"
     ruta_logo = Path(__file__).parent / "static" / "logo_finning_cat.png"
@@ -132,88 +139,92 @@ def aplicar_fondo_corporativo():
 
     /* Panel lateral izquierdo */
     .menu-panel {
-        background: rgba(8, 10, 15, 0.96);
-        border-radius: 0px 22px 22px 0px;
-        border-right: 1px solid rgba(255, 205, 17, 0.35);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        padding: 22px 18px;
-        min-height: calc(100vh - 40px);
+        background: rgba(8, 10, 15, 0.96) !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(255, 205, 17, 0.35) !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
+        padding: 20px 18px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .menu-panel-small {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
     }
 
     .logo-box {
-        background: #ffffff;
-        border-radius: 4px;
-        padding: 8px;
-        margin-bottom: 18px;
-        border: 1px solid rgba(255, 205, 17, 0.65);
+        background: #ffffff !important;
+        border-radius: 4px !important;
+        padding: 8px !important;
+        margin-bottom: 18px !important;
+        border: 1px solid rgba(255, 205, 17, 0.65) !important;
     }
 
     .logo-box img {
-        width: 100%;
-        display: block;
+        width: 100% !important;
+        display: block !important;
     }
 
     .menu-title {
         color: #ffffff !important;
-        font-size: 22px;
-        font-weight: 900;
-        line-height: 1.25;
-        text-transform: uppercase;
-        margin-bottom: 10px;
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        line-height: 1.25 !important;
+        text-transform: uppercase !important;
+        margin-bottom: 10px !important;
     }
 
     .menu-line {
-        width: 72px;
-        height: 4px;
-        background: #FFCD11;
-        margin: 12px 0 20px 0;
-        border-radius: 4px;
+        width: 72px !important;
+        height: 4px !important;
+        background: #FFCD11 !important;
+        margin: 12px 0 20px 0 !important;
+        border-radius: 4px !important;
     }
 
     .step-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin-top: 18px;
-        margin-bottom: 8px;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        margin-top: 12px !important;
+        margin-bottom: 8px !important;
     }
 
     .step-number {
-        min-width: 28px;
-        height: 28px;
-        background: #FFCD11;
-        color: #000000;
-        border-radius: 999px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
+        min-width: 28px !important;
+        height: 28px !important;
+        background: #FFCD11 !important;
+        color: #000000 !important;
+        border-radius: 999px !important;
+        font-weight: 900 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 15px !important;
     }
 
     .step-title {
         color: #ffffff !important;
-        font-size: 16px;
-        font-weight: 800;
-        margin: 0;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
     }
 
     .step-desc {
         color: #cbd5e1 !important;
-        font-size: 12px;
-        margin: 2px 0 10px 38px;
-        line-height: 1.35;
+        font-size: 12px !important;
+        margin: 2px 0 10px 38px !important;
+        line-height: 1.35 !important;
     }
 
     .menu-footer {
         color: #cbd5e1 !important;
-        font-size: 12px;
-        margin-top: 28px;
-        border-top: 1px solid rgba(255, 205, 17, 0.35);
-        padding-top: 16px;
-        line-height: 1.4;
+        font-size: 12px !important;
+        margin-top: 18px !important;
+        border-top: 1px solid rgba(255, 205, 17, 0.35) !important;
+        padding-top: 14px !important;
+        line-height: 1.4 !important;
     }
-
     /* Panel derecho */
     .report-panel {
         background: rgba(255, 255, 255, 0.92);
@@ -1912,73 +1923,74 @@ def main():
     col_menu, col_reporte = st.columns([0.22, 0.78], gap="large")
 
     with col_menu:
-        st.markdown(
-            """
-            <div class="menu-panel">
-                <div class="logo-box">
-                    <img src="app/static/logo_finning_cat.png">
-                </div>
+        html("""
+        <div class="menu-panel">
+            <div class="logo-box">
+                <img src="app/static/logo_finning_cat.png">
+            </div>
 
-                <div class="menu-title">
-                    Validación<br>Detenciones AMT
-                </div>
-                <div class="menu-line"></div>
+            <div class="menu-title">
+                VALIDACIÓN<br>DETENCIONES AMT
+            </div>
 
-                <div class="step-row">
-                    <div class="step-number">1</div>
-                    <p class="step-title">Subir archivos Excel</p>
-                </div>
-                <p class="step-desc">
-                    Carga DailyDowntimeLog y Detenciones Collahuasi.
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
+            <div class="menu-line"></div>
+
+            <div class="step-row">
+                <div class="step-number">1</div>
+                <p class="step-title">Subir archivos Excel</p>
+            </div>
+
+            <p class="step-desc">
+                Carga DailyDowntimeLog y Detenciones Collahuasi.
+            </p>
+        </div>
+        """)
 
         archivo_daily = st.file_uploader(
             "DailyDowntimeLog.xlsx",
             type=["xlsx"],
             key="archivo_daily",
+            label_visibility="collapsed"
         )
 
         archivo_collahuasi = st.file_uploader(
             "DETENCIONES COLLAHUASI 2026.xlsx",
             type=["xlsx"],
             key="archivo_collahuasi",
+            label_visibility="collapsed"
         )
 
-        st.markdown(
-            """
-                <div class="step-row">
-                    <div class="step-number">2</div>
-                    <p class="step-title">Comparar detenciones</p>
-                </div>
-                <p class="step-desc">
-                    Valida respaldo AMT, diferencias de tiempo, continuidad e In Progress.
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
+        html("""
+        <div class="menu-panel menu-panel-small">
+            <div class="step-row">
+                <div class="step-number">2</div>
+                <p class="step-title">Comparar detenciones</p>
+            </div>
+
+            <p class="step-desc">
+                Valida respaldo AMT, diferencias de tiempo, continuidad e In Progress.
+            </p>
+        </div>
+        """)
 
         comparar = st.button("▶ Comparar detenciones", type="primary")
 
-        st.markdown(
-            """
-                <div class="step-row">
-                    <div class="step-number">3</div>
-                    <p class="step-title">Descargar reporte</p>
-                </div>
-                <p class="step-desc">
-                    Las descargas aparecerán después de procesar.
-                </p>
-
-                <div class="menu-footer">
-                    La revisión valida que las detenciones de Collahuasi tengan respaldo en AMT.
-                </div>
+        html("""
+        <div class="menu-panel menu-panel-small">
+            <div class="step-row">
+                <div class="step-number">3</div>
+                <p class="step-title">Descargar reporte</p>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+
+            <p class="step-desc">
+                Las descargas aparecerán después de procesar.
+            </p>
+
+            <div class="menu-footer">
+                La revisión valida que las detenciones de Collahuasi tengan respaldo en AMT.
+            </div>
+        </div>
+        """)
 
     with col_reporte:
         st.markdown(
